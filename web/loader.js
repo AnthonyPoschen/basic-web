@@ -43,3 +43,12 @@ if (window.location.hostname === 'localhost') {
 	// Hot reloading
 	new EventSource('/dev/reload').onmessage = () => { console.log("refresh recieved"); location.reload(); }
 }
+// Auto-scan shadow DOM + light DOM changes
+const origAttach = Element.prototype.attachShadow;
+Element.prototype.attachShadow = function(...a) {
+	const sr = origAttach.apply(this, a);
+	setTimeout(scan, 0);
+	return sr;
+};
+new MutationObserver(() => setTimeout(scan, 0))
+	.observe(document.documentElement, { childList: true, subtree: true });
