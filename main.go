@@ -2,37 +2,51 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/AnthonyPoschen/basic-web.git/pkg/memfs"
+	"github.com/AnthonyPoschen/basic-web.git/pkg/util"
 	"github.com/CAFxX/httpcompression"
 )
 
 //go:embed web/*
 var embeddedFS embed.FS
+var webFS fs.FS
+
+func init() {
+	if util.IsDev() {
+		webFS = os.DirFS("./web")
+	} else {
+		tmpfs, _ := fs.Sub(embeddedFS, "web")
+		webFS = memfs.CreateMinifiedFS(tmpfs)
+	}
+	util.SetupLogger()
+}
 
 func main() {
-	var binFS fs.FS
-	// if this is a go run instance
-	if strings.Contains(os.Args[0], "go-build") {
-		fmt.Println("go run")
-		binFS = os.DirFS("./web")
-	} else {
-		fmt.Println("built binary")
-		webFS, _ := fs.Sub(embeddedFS, "web")
-		binFS = memfs.CreateMinifiedFS(webFS)
+	if util.IsDev() {
+		http.HandleFunc("/dev/reload", util.HotReloadHandler)
 	}
 	compress, _ := httpcompression.DefaultAdapter()
+
+	// include API's / other websites above this. this is a fallback catch all
 	http.Handle("/", compress(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if util.IsDev() {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
 		if r.URL.Path == "/" {
-			http.ServeFileFS(w, r, binFS, "index.html")
+			http.ServeFileFS(w, r, webFS, "index.html")
 			return
 		}
-		http.FileServer(http.FS(binFS)).ServeHTTP(w, r)
+		http.FileServer(http.FS(webFS)).ServeHTTP(w, r)
 	})))
-	http.ListenAndServe(":8080", nil)
+	port := "42069"
+	slog.Info("Server listening", "port", port)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		slog.Error("server failed to listen and serve", "error", err.Error())
+	}
 }
