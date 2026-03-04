@@ -1,0 +1,34 @@
+# github.com/CAFxX/httpcompression v0.0.9
+## explicit; go 1.11
+github.com/CAFxX/httpcompression
+github.com/CAFxX/httpcompression/contrib/andybalholm/brotli
+github.com/CAFxX/httpcompression/contrib/compress/gzip
+github.com/CAFxX/httpcompression/contrib/compress/zlib
+github.com/CAFxX/httpcompression/contrib/internal/utils
+github.com/CAFxX/httpcompression/contrib/klauspost/zstd
+# github.com/andybalholm/brotli v1.0.5
+## explicit; go 1.12
+github.com/andybalholm/brotli
+# github.com/klauspost/compress v1.16.7
+## explicit; go 1.18
+github.com/klauspost/compress
+github.com/klauspost/compress/fse
+github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/snapref
+github.com/klauspost/compress/zstd
+github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/tdewolff/minify/v2 v2.24.10
+## explicit; go 1.24.0
+github.com/tdewolff/minify/v2
+github.com/tdewolff/minify/v2/css
+github.com/tdewolff/minify/v2/html
+github.com/tdewolff/minify/v2/js
+# github.com/tdewolff/parse/v2 v2.8.10
+## explicit; go 1.11
+github.com/tdewolff/parse/v2
+github.com/tdewolff/parse/v2/buffer
+github.com/tdewolff/parse/v2/css
+github.com/tdewolff/parse/v2/html
+github.com/tdewolff/parse/v2/js
+github.com/tdewolff/parse/v2/strconv
