@@ -33,5 +33,7 @@ const scan = () => {
 document.addEventListener('DOMContentLoaded', scan);
 document.addEventListener('htmx:afterSettle', scan);
 
-// Hot reloading
-new EventSource('/dev/reload').onmessage = () => { console.log("refresh recieved"); location.reload(); }
+if (window.location.hostname === 'localhost') {
+	// Hot reloading
+	new EventSource('/dev/reload').onmessage = () => { console.log("refresh recieved"); location.reload(); }
+}
