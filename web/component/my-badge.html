@@ -1,0 +1,45 @@
+<template id="my-badge">
+	<span id="value">0</span>
+</template>
+
+<script>
+	class MyBadge extends HTMLElement {
+		static value = 0;
+		static instances = new Set();
+
+		constructor() {
+			super();
+			this.attachShadow({mode: 'open'});
+			MyBadge.instances.add(this);
+		}
+
+		static get observedAttributes() {return ['counter'];}
+		attributeChangedCallback(name, old, val) {
+			if (name === 'counter') this.counter = val;
+		}
+
+		get counter() {return MyBadge.value;}
+		set counter(val) {
+			MyBadge.value = Number(val) || 0;
+			MyBadge.updateAll();
+		}
+
+		static updateAll() {
+			MyBadge.instances.forEach(b => {
+				const el = b.shadowRoot?.getElementById('value');
+				if (el) el.textContent = MyBadge.value;
+			});
+		}
+
+		connectedCallback() {
+			const t = document.getElementById('my-badge');
+			this.shadowRoot.appendChild(t.content.cloneNode(true));
+			MyBadge.updateAll();
+		}
+
+		disconnectedCallback() {
+			MyBadge.instances.delete(this);
+		}
+	}
+	customElements.define('my-badge', MyBadge);
+</script>

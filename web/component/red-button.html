@@ -1,0 +1,23 @@
+<template id="red-button">
+	<style>
+		button {
+			padding: 12px 24px;
+			background: red;
+			color: white;
+		}
+	</style>
+	<button>
+		<slot></slot>
+	</button>
+</template>
+
+<script>
+	class RedButton extends HTMLElement {
+		constructor() {super(); this.attachShadow({mode: 'open'});}
+		connectedCallback() {
+			const t = document.getElementById('red-button');
+			this.shadowRoot.appendChild(t.content.cloneNode(true));
+		}
+	}
+	customElements.define('red-button', RedButton);
+</script>

@@ -1,0 +1,33 @@
+<template id="my-button">
+	<style>
+		button {
+			padding: 5px;
+		}
+	</style>
+	<button>
+		<slot></slot><my-badge></my-badge>
+	</button>
+</template>
+
+<script>
+	class MyButton extends HTMLElement {
+		constructor() {
+			super();
+			this.attachShadow({mode: 'open'});
+			this.counter = 0;
+		}
+		connectedCallback() {
+			const t = document.getElementById('my-button');
+			this.shadowRoot.appendChild(t.content.cloneNode(true));
+
+			const button = this.shadowRoot.querySelector('button');
+			button.addEventListener('click', () => {
+				this.counter++;
+				// this.shadowRoot.querySelector('my-badge').setAttribute('count', this.counter);
+				this.shadowRoot.querySelector('my-badge').counter = this.counter;
+				console.log(this.counter);
+			});
+		}
+	}
+	customElements.define('my-button', MyButton);
+</script>

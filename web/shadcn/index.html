@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="color-scheme" content="light dark" />
+	<script>
+		(function () {
+			var saved = localStorage.getItem('theme');
+			var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+		})();
+	</script>
+	<title>Class-less preview • shadcn-inspired CSS</title>
+	<meta name="description" content="A class-less example inspired by shadcn components." />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fordus/shadcn-classless@main/dist/shadcn-classless.css">
+	<link rel="icon" type="image/x-icon" href="https://jidef.github.io/favicon/favicon.ico">
+	<link rel="stylesheet" href="demo.css" />
+</head>
+
+<body>
+
+	<div class="demo-container">
+		<div class="demo-sidenav">
+			Getting started
+
+			<a href="#introdution">Introduction</a>
+			<a href="#installation">Installation</a>
+			<a href="#preview">Preview</a>
+			<a href="#typography">Typography</a>
+
+			<hr>
+
+			Components
+			<a href="#accordion">Accordion</a>
+			<a href="#avatar">Avatar</a>
+			<a href="#badge">Badge</a>
+			<a href="#breadcrumb">Breadcrumb</a>
+			<a href="#button">Button</a>
+			<a href="#card">Card</a>
+			<a href="#checkbox">Checkbox</a>
+			<a href="#dialog">Dialog</a>
+			<a href="#drawer">Drawer</a>
+			<a href="#form">Form</a>
+			<a href="#group">Group</a>
+			<a href="#input">Input</a>
+			<a href="#inputotp">Input OTP</a>
+			<a href="#label">Label</a>
+			<a href="#loading">Loading</a>
+			<a href="#menubar">Menubar</a>
+			<a href="#navigationmenu">Navigation Menu</a>
+			<a href="#popover">Popover</a>
+			<a href="#progress">Progress</a>
+			<a href="#radio">Radio Group</a>
+			<a href="#scrollarea">Scroll Area</a>
+			<a href="#select">Select</a>
+			<a href="#separator">Separator</a>
+			<a href="#sheet">Sheet</a>
+			<a href="#sidebar">Sidebar</a>
+			<a href="#skeleton">Skeleton</a>
+			<a href="#slider">Slider</a>
+			<a href="#sonner">Sonner</a>
+			<a href="#switch">Switch</a>
+			<a href="#table">Table</a>
+			<a href="#textarea">Textarea</a>
+			<a href="#toast">Toast</a>
+			<a href="#toggle">Toggle</a>
+			<a href="#tooltip">Tooltip</a>
+
+			<hr>
+
+			<a href="#roadmap">Roadmap</a>
+
+		</div>
+
+
+		<main class="demo-main">
+
+			<section id="introdution">
+				<hgroup>
+					<h1>shadcn-inspired</h1>
+					<p>A class-less example inspired by shadcn components.</p>
+				</hgroup>
+				<div class="demo-intro-actions">
+					<button id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+						<span id="themeIconWrapper"><i data-lucide="moon"></i></span> Toggle theme
+					</button>
+					<a href="https://github.com/fordus/shadcn-classless" target="_blank" rel="noopener" class="demo-github-btn">
+						<i data-lucide="star"></i> Star on GitHub
+					</a>
+				</div>
+				<p class="demo-intro-text">
+					Please note that not all shadcn components nor features can be implemented only with CSS. <br />
+					We try our best to get as close as possible to what it has to offer.
+				</p>
+			</section>
+
+			<hr>
+
+			<section id="installation">
+				<h2>Installation</h2>
+				<p>Include the framework directly via CDN:</p>
+				<div class="demo-install-block">
+					<div id="installCDN" class="demo-code"></div>
+					<button class="demo-copy-btn" onclick="copyCode('installCDN', this)"
+						aria-label="Copy to clipboard">Copy</button>
+				</div>
+				<p>Or download and include it locally:</p>
+				<div class="demo-install-block">
+					<div id="installLocal" class="demo-code"></div>
+					<button class="demo-copy-btn" onclick="copyCode('installLocal', this)"
+						aria-label="Copy to clipboard">Copy</button>
+				</div>
+				<p>Then start writing HTML without worrying about classes!</p>
+				<small>
+					*Note: some components use icons from the Lucide icon pack, which is not included in the distribution.
+				</small>
+			</section>
+
+			<hr>
+
+			<!-- Preview -->
+			<section id="preview">
+				<h2>Preview</h2>
+				<p>
+					Sed ultricies dolor non ante vulputate hendrerit. Vivamus sit amet
+					suscipit sapien. Nulla iaculis eros a elit pharetra egestas.
+				</p>
+				<form>
+					<input type="text" name="firstname" placeholder="First name" aria-label="First name" required />
+					<input type="email" name="email" placeholder="Email address" aria-label="Email address" autocomplete="email"
+						required />
+					<button type="submit">Subscribe</button>
+					<label for="terms">
+						<input type="checkbox" role="switch" name="terms" />
+						I agree to the
+						<a href="#" onclick="event.preventDefault()">Privacy Policy</a>
+					</label>
+				</form>
+			</section>
+			<!-- ./ Preview -->
+
+
+			<hr />
+
+
+			<!-- Typography-->
+			<section id="typography">
+				<h2>Typography</h2>
+				<p>
+					Aliquam lobortis vitae nibh nec rhoncus. Morbi mattis neque eget
+					efficitur feugiat. Vivamus porta nunc a erat mattis, mattis feugiat
+					turpis pretium. Quisque sed tristique felis.
+				</p>
+
+				<!-- Blockquote-->
+				<blockquote>
+					"Maecenas vehicula metus tellus, vitae congue turpis hendrerit non.
+					Nam at dui sit amet ipsum cursus ornare."
+					<footer>
+						<cite>- Phasellus eget lacinia</cite>
+					</footer>
+				</blockquote>
+
+				<!-- Lists-->
+				<h3>Lists</h3>
+				<ul>
+					<li>Aliquam lobortis lacus eu libero ornare facilisis.</li>
+					<li>Nam et magna at libero scelerisque egestas.</li>
+					<li>Suspendisse id nisl ut leo finibus vehicula quis eu ex.</li>
+					<li>Proin ultricies turpis et volutpat vehicula.</li>
+				</ul>
+
+				<!-- Inline text elements-->
+				<h3>Inline text elements</h3>
+				<p><a href="#" onclick="event.preventDefault()">Link</a></p>
+				<p><strong>Bold</strong></p>
+				<p><em>Italic</em></p>
+				<p><u>Underline</u></p>
+				<p><del>Deleted</del></p>
+				<p><ins>Inserted</ins></p>
+				<p><s>Strikethrough</s></p>
+				<p><small>Small </small></p>
+				<p>Text <sub>Sub</sub></p>
+				<p>Text <sup>Sup</sup></p>
+				<p>
+					<abbr title="Abbreviation" data-tooltip="Abbreviation">Abbr.</abbr>
+				</p>
+				<p><kbd>Kbd</kbd></p>
+				<p><mark>Highlighted</mark></p>
+
+				<!-- Headings-->
+				<h3>Heading 3</h3>
+				<p>
+					Integer bibendum malesuada libero vel eleifend. Fusce iaculis turpis
+					ipsum, at efficitur sem scelerisque vel. Aliquam auctor diam ut purus
+					cursus fringilla. Class aptent taciti sociosqu ad litora torquent per
+					conubia nostra, per inceptos himenaeos.
+				</p>
+				<h4>Heading 4</h4>
+				<p>
+					Cras fermentum velit vitae auctor aliquet. Nunc non congue urna, at
+					blandit nibh. Donec ac fermentum felis. Vivamus tincidunt arcu ut
+					lacus hendrerit, eget mattis dui finibus.
+				</p>
+				<h5>Heading 5</h5>
+				<p>
+					Donec nec egestas nulla. Sed varius placerat felis eu suscipit. Mauris
+					maximus ante in consequat luctus. Morbi euismod sagittis efficitur.
+					Aenean non eros orci. Vivamus ut diam sem.
+				</p>
+				<h6>Heading 6</h6>
+				<p>
+					Ut sed quam non mauris placerat consequat vitae id risus. Vestibulum
+					tincidunt nulla ut tortor posuere, vitae malesuada tortor molestie.
+					Sed nec interdum dolor. Vestibulum id auctor nisi, a efficitur sem.
+					Aliquam sollicitudin efficitur turpis, sollicitudin hendrerit ligula
+					semper id. Nunc risus felis, egestas eu tristique eget, convallis in
+					velit.
+				</p>
+
+				<!-- Medias-->
+				<figure>
+					<img src="img/img.jpg" alt="Minimal landscape" />
+					<figcaption>
+						Image from
+						<a href="https://unsplash.com/photos/a562ZEFKW8I" target="_blank">unsplash.com</a>
+					</figcaption>
+				</figure>
+			</section>
+			<!-- ./ Typography-->
+
+
+			<hr />
+
+			<section id="accordion">
+				<h2>Accordions</h2>
+				<details>
+					<summary>Accordion 1</summary>
+					<p>
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+						Pellentesque urna diam, tincidunt nec porta sed, auctor id velit.
+						Etiam venenatis nisl ut orci consequat, vitae tempus quam commodo.
+						Nulla non mauris ipsum. Aliquam eu posuere orci. Nulla convallis
+						lectus rutrum quam hendrerit, in facilisis elit sollicitudin. Mauris
+						pulvinar pulvinar mi, dictum tristique elit auctor quis. Maecenas ac
+						ipsum ultrices, porta turpis sit amet, congue turpis.
+					</p>
+				</details>
+				<details open>
+					<summary>Accordion 2</summary>
+					<ul>
+						<li>Vestibulum id elit quis massa interdum sodales.</li>
+						<li>Nunc quis eros vel odio pretium tincidunt nec quis neque.</li>
+						<li>Quisque sed eros non eros ornare elementum.</li>
+						<li>Cras sed libero aliquet, porta dolor quis, dapibus ipsum.</li>
+					</ul>
+				</details>
+			</section>
+
+			<hr />
+
+			<section id="avatar">
+				<h2>Avatar</h2>
+				<img src="https://picsum.photos/50" alt="avatar" avatar>
+			</section>
+
+			<hr />
+
+			<section id="badge">
+				<h2>Badge</h2>
+				<kbd>Primary</kbd>
+				<kbd secondary>Secondary</kbd>
+				<kbd outline>Outile</kbd>
+				<kbd destructive>Destructive</kbd>
+			</section>
+
+			<hr />
+
+			<section id="breadcrumb">
+				<h2>Breadcrumb</h2>
+				<nav>
+					<a href="#">Home</a>
+					<a href="#">...</a>
+					<a href="#">Components</a>
+					<a href="#">Breadcrumb</a>
+				</nav>
+
+				<nav breadcrumb="/">
+					<a href="#">Home</a>
+					<a href="#">...</a>
+					<a href="#">Components</a>
+					<a href="#">Breadcrumb</a>
+				</nav>
+
+			</section>
+
+			<hr />
+
+			<section id="button">
+				<h2>Buttons</h2>
+				<button>primary</button>
+				<button secondary>secondary</button>
+				<input type="submit" value="outline">
+				<input type="button" value="ghost">
+				<input type="reset" value="destructive">
+			</section>
+
+			<hr />
+
+			<section id="card">
+				<h2>Card</h2>
+				<article>
+					<p>
+						Nullam dui arcu, malesuada et sodales eu, efficitur vitae dolor. Sed
+						ultricies dolor non ante vulputate hendrerit. Vivamus sit amet
+						suscipit sapien. Nulla iaculis eros a elit pharetra egestas. Nunc
+						placerat facilisis cursus. Sed vestibulum metus eget dolor pharetra
+						rutrum.
+					</p>
+					<footer>
+						<small>Duis nec elit placerat, suscipit nibh quis, finibus neque.</small>
+					</footer>
+				</article>
+			</section>
+
+			<hr />
+
+			<section id="checkbox">
+				<h2>Checkbox</h2>
+				<input type="checkbox" checked />
+				<input type="checkbox" />
+			</section>
+
+			<hr />
+
+			<section id="dialog">
+				<h2>Dialog</h2>
+				<button onclick="modalExample.showModal()">
+					Open dialog
+				</button>
+
+				<dialog id="modalExample">
+					<header>
+						<h3>Confirm your action!</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="modalExample.close()">
+						Close
+					</button>
+				</dialog>
+			</section>
+
+			<hr />
+
+			<section id="drawer">
+				<h2>Drawer</h2>
+				<button onclick="document.getElementById('drawerExample').showModal()">
+					Open drawer
+				</button>
+
+				<dialog drawer id="drawerExample">
+					<header>
+						<h3>Confirm your action!</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="drawerExample.close()">
+						Close
+					</button>
+				</dialog>
+			</section>
+
+			<hr />
+
+			<section id="form">
+				<h2>Form</h2>
+				<form>
+					<!-- Search -->
+					<label>
+						Search
+						<input type="search" name="search" placeholder="Search" />
+					</label>
+
+					<!-- Textarea -->
+					<label>
+						Textarea
+						<textarea name=""></textarea>
+					</label>
+
+					<!-- Text -->
+					<label>
+						Text
+						<input type="text" name="text" placeholder="Text" />
+					</label>
+					<small>Curabitur consequat lacus at lacus porta finibus.</small>
+
+					<!-- Select -->
+					<label>
+						Select
+						<select id="select1" name="select" required>
+							<option value="" selected>Select…</option>
+							<option>…</option>
+						</select>
+					</label>
+
+					<!-- File browser -->
+					<label>File browser
+						<input type="file" name="file" />
+					</label>
+
+					<!-- Range slider control -->
+					<label>Range slider
+						<input type="range" min="0" max="100" value="50" name="range" />
+					</label>
+
+					<!-- States -->
+					<label>
+						Disabled
+						<input type="text" name="disabled" placeholder="Disabled" disabled />
+					</label>
+
+					<!-- Date-->
+					<label>Date
+						<input type="date" name="date" />
+					</label>
+
+					<!-- Time-->
+					<label>Time
+						<input type="time" name="time" />
+					</label>
+
+					<!-- Color-->
+					<label>Color
+						<input type="color" name="color" value="#0eaaaa" />
+					</label>
+
+					<!-- Checkboxes -->
+					<fieldset>
+						<legend><strong>Checkboxes</strong></legend>
+						<label>
+							<input type="checkbox" name="checkbox-1" checked />
+							Checkbox
+						</label>
+						<label>
+							<input type="checkbox" name="checkbox-2" />
+							Checkbox
+						</label>
+					</fieldset>
+
+					<!-- Toggles -->
+					<fieldset id="toggles-id">
+						<legend><strong>Toggles</strong></legend>
+
+						<input id="toggle1" type="checkbox" icon checked>
+						<i data-lucide="bold" onclick="toggle1.click()"></i>
+
+						<input id="toggle2" type="checkbox" icon>
+						<i data-lucide="italic" onclick="toggle2.click()"></i>
+					</fieldset>
+
+					<!-- Radio buttons -->
+					<fieldset>
+						<legend><strong>Radio buttons</strong></legend>
+						<label>
+							<input type="radio" name="radio1" value="radio-1" checked />
+							Radio button
+						</label>
+						<label for="radio-2">
+							<input type="radio" name="radio1" value="radio-2" />
+							Radio button
+						</label>
+					</fieldset>
+
+					<!-- Buttons -->
+					<input type="reset" value="Reset" onclick="event.preventDefault()" />
+					<input type="submit" value="Submit" onclick="event.preventDefault()" />
+				</form>
+			</section>
+
+			<hr />
+
+			<section id="group">
+				<h2>Group</h2>
+				<fieldset>
+					<input name="email" type="email" placeholder="Enter your email" autocomplete="email" />
+					<input type="submit" value="Subscribe" />
+				</fieldset>
+				<fieldset role="group">
+					<input name="email" type="email" placeholder="Enter your email" autocomplete="email" />
+					<input type="submit" value="Subscribe" />
+				</fieldset>
+			</section>
+
+			<hr />
+
+			<section id="input">
+				<h2>Input</h2>
+				<div class="demo-gapped">
+					<!-- Search -->
+					<input type="search" name="search" placeholder="Search" />
+					<!-- Textarea -->
+					<textarea></textarea>
+					<!-- Text -->
+					<input type="text" name="text" placeholder="Text" />
+					<!-- Password -->
+					<input type="password" name="password" placeholder="Password" />
+					<!-- Select -->
+					<select name="select" required>
+						<option value="" selected>Select…</option>
+						<option>…</option>
+					</select>
+					<!-- File browser -->
+					<input type="file" name="file" />
+					<!-- Disabled -->
+					<input type="text" name="disabled" placeholder="Disabled" disabled />
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="inputotp">
+				<h2>Input OTP</h2>
+				<div class="demo-otp">
+					<fieldset role="otp">
+						<input type="text" maxlength="1">
+						<input type="text" maxlength="1">
+						<input type="text" maxlength="1">
+					</fieldset>
+					-
+					<fieldset role="otp">
+						<input type="text" maxlength="1">
+						<input type="text" maxlength="1">
+						<input type="text" maxlength="1">
+					</fieldset>
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="label">
+				<h2>Labels</h2>
+				<label>
+					<input type="checkbox" checked />
+					Label
+				</label>
+				<label>
+					<input type="checkbox" />
+					Another label
+				</label>
+			</section>
+
+			<hr />
+
+			<section id="loading">
+				<h2>Loading</h2>
+				<article aria-busy="true" style="text-align: center;"></article>
+				<button aria-busy="true">Please wait…</button>
+				<br />
+				<small>With spinner:</small>
+				<article aria-busy="spinner" style="text-align: center;"></article>
+				<button aria-busy="spinner">Please wait…</button>
+			</section>
+
+			<hr />
+
+			<section id="menubar">
+				<h2>Menubar</h2>
+				<menu>
+					<li>File</li>
+					<li>Edit</li>
+					<li>View</li>
+					<li>Profiles</li>
+				</menu>
+			</section>
+
+			<hr />
+
+			<section id="navigationmenu">
+				<h2>Navigation Menu</h2>
+				<nav>
+					<input type="button" value="Getting started">
+					<input type="button" value="Components">
+					<input type="button" value="Documentation">
+				</nav>
+			</section>
+
+			<hr />
+
+			<section id="popover">
+				<h2>Popover</h2>
+				<input type="submit" value="Open simple popover" popovertarget="popover1">
+				<div popover id="popover1">Simple popover</div>
+
+				<input type="submit" value="Open more complex popover" popovertarget="popover2">
+				<div popover id="popover2">
+					<h3>Dimensions</h3>
+					<small>Set the dimensions for the layer.</small>
+					<div class="demo-popover-content">
+						<label>
+							Width
+							<input type="text" name="demo-width" value="100%" />
+						</label>
+
+						<label>
+							Max. width
+							<input type="text" name="demo-max-width" value="300px" />
+						</label>
+
+						<label>
+							Height
+							<input type="text" name="demo-width" value="25px" />
+						</label>
+
+						<label>
+							Max. height
+							<input type="text" name="demo-max-width" value="none" />
+						</label>
+					</div>
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="progress">
+				<h2>Progress bar</h2>
+				<progress value="25" max="100"></progress>
+				<progress></progress>
+			</section>
+
+			<hr />
+
+			<section id="radio">
+				<h2>Radio Group</h2>
+				<label>
+					<input type="radio" name="radio2" value="radio-3" checked />
+					Radio button
+				</label>
+				<label>
+					<input type="radio" name="radio2" value="radio-4" />
+					Radio button
+				</label>
+			</section>
+
+			<hr />
+
+			<section id="scrollarea">
+				<h2>Scroll Area</h2>
+
+				<div style="width: 100%;height: 30rem;display: flex;flex-direction: row;gap: 1rem;">
+					<div scroll-x="" style="width: 50%; height: 100%;">
+						<div style="width: 200%;height: 100%;background: var(--accent);"></div>
+					</div>
+					<div scroll-y="" style="width: 50%;">
+						<div style="height: 60rem;background: var(--accent);"></div>
+					</div>
+				</div>
+
+			</section>
+
+			<hr />
+
+			<section id="select">
+				<h2>Select</h2>
+				<select>
+					<option value="" selected>Select…</option>
+					<option>option 1</option>
+					<option>option 2</option>
+					<option>option 3</option>
+					<option>option 4</option>
+				</select>
+			</section>
+
+			<hr />
+
+			<section id="separator">
+				<h2>Separator</h2>
+				<p>
+					Radix Primitives
+					An open-source UI component library.
+				</p>
+				<hr />
+				<div style="display: flex;">
+					<a href="#">Blog</a>
+					<hr vertical />
+					<a href="#">Docs</a>
+					<hr vertical />
+					<a href="#">Source</a>
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="sheet">
+				<h2>Sheet</h2>
+				<input type="submit" onclick="sheetTop.showModal()" value="Sheet top">
+				<dialog sheet-top id="sheetTop">
+					<header>
+						<h3>Sheet top</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="sheetTop.close()">
+						Close
+					</button>
+				</dialog>
+
+
+				<input type="submit" onclick="sheetBottom.showModal()" value="Sheet bottom">
+				<dialog sheet-bottom id="sheetBottom">
+					<header>
+						<h3>Sheet bottom</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="sheetBottom.close()">
+						Close
+					</button>
+				</dialog>
+
+
+				<input type="submit" onclick="sheetLeft.showModal()" value="Sheet left">
+				<dialog sheet-left id="sheetLeft">
+					<header>
+						<h3>Sheet left</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="sheetLeft.close()">
+						Close
+					</button>
+				</dialog>
+
+
+				<input type="submit" onclick="sheetRight.showModal()" value="Sheet right">
+				<dialog sheet-right id="sheetRight">
+					<header>
+						<h3>Sheet right</h3>
+					</header>
+					<p>
+						Cras sit amet maximus risus. Pellentesque sodales odio sit amet augue
+						finibus pellentesque. Nullam finibus risus non semper euismod.
+					</p>
+					<button aria-label="Close" rel="prev" onclick="sheetRight.close()">
+						Close
+					</button>
+				</dialog>
+			</section>
+
+			<hr />
+
+			<section id="sidebar">
+				<h2>Sidebar</h2>
+				<div class="demo-sidenav-container">
+					<aside style="width: 20%;">
+
+						<header>
+							<div class="demo-sidebar-header">
+								<i data-lucide="gallery-vertical-end" fill="none"></i>
+								<span>
+									<h6 style="margin-bottom: 0;">Acme Inc</h6>
+									<small>Enterprise</small>
+								</span>
+							</div>
+						</header>
+
+						<main>
+							<small>Platform</small>
+							<div class="demo-sidenav-links">
+								<a href="#">Playground</a>
+								<a href="#">Models</a>
+								<a href="#">Documentation</a>
+								<a href="#">Settings</a>
+							</div>
+
+							<small>Projects</small>
+							<div class="demo-sidenav-links">
+								<a href="#">Design Engineering</a>
+								<a href="#">Sales & Marketing</a>
+								<a href="#">Travel</a>
+								<a href="#">More</a>
+							</div>
+						</main>
+
+						<footer>
+							<div class="demo-sidebar-header">
+								<img src="https://picsum.photos/32" alt="avatar" avatar>
+								<span>
+									<h6 style="margin-bottom: 0;">Fordus</h6>
+									<small>& Nandaleio</small>
+								</span>
+							</div>
+						</footer>
+
+					</aside>
+
+					<div class="demo-sidenav-content">
+						<nav breadcrumb>
+							<a href="#" style="display: flex; align-items: center;"> <i data-lucide="panel-left"></i> </a>
+							<a href="#">Building Your Application</a>
+							<a href="#">Data Fetching</a>
+						</nav>
+
+						<div skeleton style="width: 100%; height: 60%;"></div>
+						<div skeleton style="width: 100%; height: 30%;"></div>
+					</div>
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="skeleton">
+				<h2>Skeleton</h2>
+				<div class="demo-skeleton-gap">
+					<div class="demo-skeleton-inline">
+						<div skeleton style="width: 3rem; height: 3rem; border-radius: 50%;"></div>
+						<div class="demo-skeleton-stack">
+							<div skeleton style="width: 100%; height: 1rem;"></div>
+							<div skeleton style="width: 75%; height: 1rem;"></div>
+						</div>
+					</div>
+					<div skeleton style="width: 100%; height: 3rem;">
+						<p>This should NOT be displayed</p>
+					</div>
+				</div>
+			</section>
+
+			<hr />
+
+			<section id="slider">
+				<h2>Slider</h2>
+				<input type="range" min="0" max="100" value="50" name="range" />
+			</section>
+
+			<hr />
+
+			<section id="sonner">
+				<h2>Sonner</h2>
+				<li id="sonnerLiExample" hidden>
+					<div class="demo-toast">
+						<div>
+							<h6>Scheduled: Catch up</h6>
+							<small>Friday, February 10, 2023 at 5:57 PM</small>
+						</div>
+						<button>Undo</button>
+					</div>
+				</li>
+				<input type="submit" value="Add toast" onclick="
+          let li = document.getElementById('sonnerLiExample').cloneNode(true);
+          li.hidden = false;
+          sonnerDialog.appendChild(li);
+          setTimeout(() => li.remove(), 5000);
+        ">
+				<dialog id="sonnerDialog" sonner open>
+
+				</dialog>
+			</section>
+
+			<hr />
+
+			<section id="switch">
+				<h2>Switch</h2>
+				TODO
+			</section>
+
+			<hr />
+
+			<section id="table">
+				<h2>Table</h2>
+				<table style="width: 100%;">
+					<caption>
+						Table caption
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">Person</th>
+							<th scope="col">Most interest in</th>
+							<th scope="col">Age</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td scope="row">Chris</th>
+							<td>HTML tables</td>
+							<td>22</td>
+						</tr>
+						<tr>
+							<td scope="row">Dennis</th>
+							<td>Web accessibility</td>
+							<td>45</td>
+						</tr>
+						<tr>
+							<td scope="row">Sarah</th>
+							<td>JavaScript frameworks</td>
+							<td>29</td>
+						</tr>
+						<tr>
+							<td scope="row">Karen</th>
+							<td>Web performance</td>
+							<td>36</td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<th scope="row" colspan="2">Average age</th>
+							<td>33</td>
+						</tr>
+					</tfoot>
+				</table>
+			</section>
+
+			<hr />
+
+			<section id="textarea">
+				<h2>Textarea</h2>
+				<textarea></textarea>
+			</section>
+
+			<hr />
+
+			<section id="toast">
+				<h2>Toast</h2>
+				<input type="submit" value="Add to calendar" onclick="toastDialog.open = true">
+
+				<dialog id="toastDialog" toast>
+					<div class="demo-toast">
+						<div>
+							<h6>Scheduled: Catch up</h6>
+							<small>Friday, February 10, 2023 at 5:57 PM</small>
+						</div>
+						<input type="submit" value="Undo" onclick="toastDialog.close()">
+					</div>
+				</dialog>
+			</section>
+
+			<hr />
+
+			<section id="toggle">
+				<h2>Toggle</h2>
+				<input id="toggle4" type="checkbox" icon checked>
+				<i data-lucide="bold" onclick="toggle4.click()"></i>
+
+				<input id="toggle5" type="checkbox" icon>
+				<i data-lucide="italic" onclick="toggle5.click()"></i>
+			</section>
+
+			<hr />
+
+			<section id="tooltip">
+				<h2>Tooltip</h2>
+				<span tooltip-top="Tooltip content">
+					<input type="submit" value="Tooltip top">
+				</span>
+
+				<span tooltip-bottom="Tooltip content">
+					<input type="submit" value="Tooltip bottom">
+				</span>
+
+				<span tooltip-left="Tooltip content">
+					<input type="submit" value="Tooltip left">
+				</span>
+
+				<span tooltip-right="Tooltip content">
+					<input type="submit" value="Tooltip right">
+				</span>
+
+			</section>
+
+			<hr />
+
+			<hr />
+
+			<!-- Roadmap -->
+			<section id="roadmap">
+				<h2>Roadmap</h2>
+				<p>Components planned for future releases.</p>
+				<div class="demo-roadmap-grid">
+					<kbd>Carousel</kbd>
+					<kbd>Chart</kbd>
+					<kbd>Alert</kbd>
+					<kbd>Alert Dialog</kbd>
+					<kbd>Aspect Ratio</kbd>
+					<kbd>Calendar</kbd>
+					<kbd>Collapsible</kbd>
+					<kbd>Combobox</kbd>
+					<kbd>Command</kbd>
+					<kbd>Context Menu</kbd>
+					<kbd>Data Table</kbd>
+					<kbd>Date Picker</kbd>
+					<kbd>Dropdown Menu</kbd>
+					<kbd>Hover Card</kbd>
+					<kbd>Pagination</kbd>
+					<kbd>Resizable</kbd>
+					<kbd>Tabs</kbd>
+				</div>
+			</section>
+			<!-- ./ Roadmap -->
+
+			<hr />
+
+			<!-- Footer -->
+			<footer>
+				<small>
+					Inspired by <a href="https://ui.shadcn.com/">shadcn/ui</a> and
+					<a href="https://picocss.com">Pico</a>
+				</small>
+			</footer>
+			<!-- ./ Footer -->
+
+
+		</main>
+
+	</div>
+
+	<button id="backToTop" onclick="document.querySelector('.demo-main').scrollTo({top:0,behavior:'smooth'})"
+		aria-label="Back to top">
+		<i data-lucide="arrow-up"></i>
+	</button>
+
+	<script src="js/lucide.min.js"></script>
+	<script>
+		lucide.createIcons();
+	</script>
+	<script src="js/shiki.mjs" type="module"></script>
+	<script>
+		// Theme toggler
+		function toggleTheme() {
+			const html = document.documentElement;
+			const currentTheme = html.getAttribute('data-theme');
+			const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+			html.setAttribute('data-theme', newTheme);
+			localStorage.setItem('theme', newTheme);
+			updateThemeIcon(newTheme);
+		}
+
+		function updateThemeIcon(theme) {
+			const wrapper = document.getElementById('themeIconWrapper');
+			if (wrapper) {
+				wrapper.innerHTML = `<i data-lucide="${theme === 'dark' ? 'sun' : 'moon'}"></i>`;
+				lucide.createIcons();
+			}
+		}
+
+		// Initialize theme from localStorage or system preference
+		function initTheme() {
+			const savedTheme = localStorage.getItem('theme');
+			const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+			document.documentElement.setAttribute('data-theme', initialTheme);
+			updateThemeIcon(initialTheme);
+		}
+
+		// Listen for system theme changes
+		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+			if (!localStorage.getItem('theme')) {
+				const newTheme = e.matches ? 'dark' : 'light';
+				document.documentElement.setAttribute('data-theme', newTheme);
+				updateThemeIcon(newTheme);
+			}
+		});
+
+		// Initialize on page load
+		initTheme();
+
+		// Copy code to clipboard
+		function copyCode(id, btn) {
+			const el = document.getElementById(id);
+			const text = (el.querySelector('pre')?.textContent || el.textContent).trim();
+			navigator.clipboard.writeText(text).then(() => {
+				btn.textContent = 'Copied!';
+				btn.classList.add('copied');
+				setTimeout(() => {
+					btn.textContent = 'Copy';
+					btn.classList.remove('copied');
+				}, 1500);
+			});
+		}
+
+		// Back to top visibility
+		const demoMain = document.querySelector('.demo-main');
+		const backToTopBtn = document.getElementById('backToTop');
+		demoMain.addEventListener('scroll', () => {
+			backToTopBtn.classList.toggle('visible', demoMain.scrollTop > 300);
+		});
+	</script>
+</body>
+
+</html>
