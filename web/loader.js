@@ -22,7 +22,13 @@ const scan = () => {
 				if (template) document.head.appendChild(template);
 				div.querySelectorAll('script').forEach(s => {
 					const ns = document.createElement('script');
-					ns.textContent = s.textContent;
+					if (s.type) ns.type = s.type;          // ← preserves type="module"
+					if (s.src) {
+						ns.src = s.src;
+						ns.async = false;                    // preserve load order
+					} else {
+						ns.textContent = s.textContent;
+					}
 					document.head.appendChild(ns);
 				});
 				setTimeout(scan, 0);
