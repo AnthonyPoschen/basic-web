@@ -34,7 +34,7 @@ func init() {
 
 func main() {
 	// include API's / other websites above this. this is a fallback catch all
-	http.Handle("/api/items", util.CompressFunc(itemsHandler))
+	http.Handle("/api/items", util.Middleware(util.CompressFunc(itemsHandler)))
 
 	port := "42069"
 	slog.Info("Server listening", "port", port)
@@ -45,28 +45,29 @@ func main() {
 }
 
 func itemsHandler(w http.ResponseWriter, r *http.Request) {
-       if r.Method != http.MethodGet && r.Method != http.MethodHead {
-               http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-               return
-       }
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-       items := []struct {
-               ID        string
-               Description string
-       }{
-               {ID: "abc", Description: "First sample item"},
-               {ID: "def", Description: "Second sample item"},
-               {ID: "ghi", Description: "Third sample item"},
-       }
+	items := []struct {
+		ID          string
+		Description string
+	}{
+		{ID: "abc", Description: "First sample item"},
+		{ID: "def", Description: "Second sample item"},
+		{ID: "ghi", Description: "Third sample item"},
+	}
 
-       var buffer strings.Builder
-       for _, item := range items {
-               tmpl := `<li><a href="/items/%s">%s</a></li>`
-               escapedID := html.EscapeString(item.ID)
-               escapedDescription := html.EscapeString(item.Description)
-               buffer.WriteString(fmt.Sprintf(tmpl, escapedID, escapedDescription))
-       }
+	var buffer strings.Builder
+	for _, item := range items {
+		tmpl := `<li><a href="/items/%s">%s</a></li>`
+		escapedID := html.EscapeString(item.ID)
+		escapedDescription := html.EscapeString(item.Description)
+		buffer.WriteString(fmt.Sprintf(tmpl, escapedID, escapedDescription))
+	}
 
-       w.Header().Set("Content-Type", "text/html; charset=utf-8")
-       _, _ = w.Write([]byte(buffer.String()))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(buffer.String()))
 }
+

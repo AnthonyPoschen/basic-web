@@ -58,7 +58,17 @@ func framework(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type statusWriter struct {
+	http.ResponseWriter
+	Status int
+}
+
+func (sw *statusWriter) WriteHeader(code int) {
+	sw.Status = code
+	sw.ResponseWriter.WriteHeader(code)
+}
 func Middleware(next http.Handler) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if IsDev() {
 			w.Header().Set("Cache-Control", "no-cache")
@@ -66,7 +76,9 @@ func Middleware(next http.Handler) http.Handler {
 			// 1 day cache expiry
 			w.Header().Set("Cache-Control", "max-age=86400")
 		}
-		next.ServeHTTP(w, r)
+		sw := &statusWriter{ResponseWriter: w, Status: http.StatusOK}
+		next.ServeHTTP(sw, r)
+		slog.Debug("Request:", "Status", sw.Status, "url", r.URL.Path)
 	})
 }
 
@@ -94,13 +106,18 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	// mux.Handle("/component-manifest.json", Middleware(CompressFunc(componentManifestHandler)))
 
 	//add default http file server
-	mux.Handle("/", CompressFunc(func(w http.ResponseWriter, r *http.Request) {
-		if shouldServeIndex(r.URL.Path, files) {
+	mux.Handle("/", Middleware(CompressFunc(func(w http.ResponseWriter, r *http.Request) {
+		ok, err := shouldServeIndex(r.URL.Path, files)
+		if err != nil {
+			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+			return
+		}
+		if ok {
 			http.ServeFileFS(w, r, files, "index.html")
 			return
 		}
 		http.ServeFileFS(w, r, files, r.URL.Path)
-	}))
+	})))
 }
 
 func componentManifestHandler(w http.ResponseWriter, r *http.Request) {
@@ -182,19 +199,19 @@ func buildComponentManifest() ([]byte, error) {
 
 	return buffer.Bytes(), nil
 }
-func shouldServeIndex(requestPath string, files fs.FS) bool {
+func shouldServeIndex(requestPath string, files fs.FS) (bool, error) {
 	if requestPath == "/" {
-		return true
+		return true, nil
 	}
 
 	cleanPath := path.Clean(strings.TrimPrefix(requestPath, "/"))
 	if cleanPath == "." || cleanPath == "" {
-		return true
+		return true, nil
 	}
 
-	if _, err := fs.Stat(files, cleanPath); err == nil {
-		return false
+	if _, err := fs.Stat(files, cleanPath); err != nil {
+		return false, err
 	}
 
-	return !strings.Contains(path.Base(cleanPath), ".")
+	return !strings.Contains(path.Base(cleanPath), "."), nil
 }
