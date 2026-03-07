@@ -1,7 +1,6 @@
 <template id="page-item">
     <div class="container">
         <h1>Item</h1>
-        <p>Welcome to the item page!</p>
         <p>Resolved UUID: <span id="uuid">not provided</span></p>
     </div>
 </template>
@@ -10,9 +9,11 @@
     customElements.define('page-item', class extends HTMLElement {
         constructor() {
             super();
+            this.attachShadow({ mode: 'open' })
             const template = document.getElementById('page-item');
             const templateContent = template.content;
-            this.attachShadow({ mode: 'open' }).appendChild(templateContent.cloneNode(true));
+            
+            this.shadowRoot.appendChild(templateContent.cloneNode(true));
         }
 
 		connectedCallback() {
@@ -20,9 +21,10 @@
 		}
 
 		render() {
+            console.log(this.route);
             const routeUuid = this.route?.params?.uuid
                 || this.route?.query?.uuid
-                || this.route?.queryKeys?.[0]
+                || this.route?.queryKeys?.uuid
                 || 'not provided';
 			this.shadowRoot.getElementById('uuid').textContent = routeUuid;
 		}

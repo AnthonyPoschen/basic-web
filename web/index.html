@@ -2,8 +2,12 @@
 <html>
 
 <head>
+	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+
+	<script src="/globalSheet.js"></script>
 	<script src="/loader.js"></script>
 	<script src="/router.js"></script>
+	
 	<link rel="stylesheet" href="/shadcn-classless.css">
 	<style>
 		:not(:defined) {
@@ -36,10 +40,9 @@
 		}
 	</style>
 	<script>
-		window.Router.register('/', 'page-home-new');
+		window.Router.register('/', 'page-home');
 		window.Router.register('/items', 'page-items');
 		window.Router.register('/items/:uuid', 'page-item');
-		// window.Router.register('/items', 'page-home');
 	</script>
 
 </head>
@@ -47,9 +50,7 @@
 <body>
 	<nav>
 		<a href="/">Home</a>
-		<a href="/items/550e8400-e29b-41d4-a716-446655440000">Path UUID example</a>
-		<a href="/items?uuid=123e4567-e89b-12d3-a456-426614174000">Query UUID example</a>
-		<a href="/items?uuid=abc">TTTTTTT</a>
+		<a href="/items">Items</a>
 	</nav>
 
 	<route-view not-found="page-home"></route-view>

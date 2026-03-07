@@ -149,19 +149,47 @@ class RouteView extends HTMLElement {
 
 customElements.define('route-view', RouteView);
 
+const hasHxNavigation = (element) => (
+	element.hasAttribute('hx-boost')
+	|| element.hasAttribute('hx-get')
+	|| element.hasAttribute('hx-post')
+	|| element.hasAttribute('hx-put')
+	|| element.hasAttribute('hx-patch')
+	|| element.hasAttribute('hx-delete')
+);
+
+const findLinkTarget = (event) => {
+	for (const target of event.composedPath()) {
+		if (!(target instanceof Element)) continue;
+		if (target.matches('a[href]')) return target;
+	}
+	return null;
+};
+
+const shouldHandleLink = (link) => {
+	if (link.target && link.target !== '_self') return false;
+	if (link.hasAttribute('download')) return false;
+	if (link.hasAttribute('data-router-ignore')) return false;
+	if (hasHxNavigation(link)) return false;
+
+	const url = new URL(link.href, window.location.href);
+	if (url.origin !== window.location.origin) return false;
+	if (!url.pathname.startsWith('/')) return false;
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+
+	return true;
+};
+
 document.addEventListener('click', event => {
 	if (event.defaultPrevented) return;
 	if (event.button !== 0) return;
 	if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-	const link = event.target.closest('a[href]');
+	const link = findLinkTarget(event);
 	if (!link) return;
-	if (link.target && link.target !== '_self') return;
-	if (link.hasAttribute('download')) return;
+	if (!shouldHandleLink(link)) return;
 
 	const url = new URL(link.href, window.location.href);
-	if (url.origin !== window.location.origin) return;
-	if (!url.pathname.startsWith('/')) return;
 
 	event.preventDefault();
 	navigate(`${url.pathname}${url.search}${url.hash}`);

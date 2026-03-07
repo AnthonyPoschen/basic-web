@@ -2,10 +2,13 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/AnthonyPoschen/basic-web.git/pkg/memfs"
 	"github.com/AnthonyPoschen/basic-web.git/pkg/util"
@@ -31,7 +34,8 @@ func init() {
 
 func main() {
 	// include API's / other websites above this. this is a fallback catch all
-	http.Handle("/foo", util.CompressFunc(foo))
+	http.Handle("/api/items", util.CompressFunc(itemsHandler))
+
 	port := "42069"
 	slog.Info("Server listening", "port", port)
 	err := http.ListenAndServe(":"+port, http.DefaultServeMux)
@@ -40,4 +44,29 @@ func main() {
 	}
 }
 
-func foo(w http.ResponseWriter, r *http.Request) {}
+func itemsHandler(w http.ResponseWriter, r *http.Request) {
+       if r.Method != http.MethodGet && r.Method != http.MethodHead {
+               http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+               return
+       }
+
+       items := []struct {
+               ID        string
+               Description string
+       }{
+               {ID: "abc", Description: "First sample item"},
+               {ID: "def", Description: "Second sample item"},
+               {ID: "ghi", Description: "Third sample item"},
+       }
+
+       var buffer strings.Builder
+       for _, item := range items {
+               tmpl := `<li><a href="/items/%s">%s</a></li>`
+               escapedID := html.EscapeString(item.ID)
+               escapedDescription := html.EscapeString(item.Description)
+               buffer.WriteString(fmt.Sprintf(tmpl, escapedID, escapedDescription))
+       }
+
+       w.Header().Set("Content-Type", "text/html; charset=utf-8")
+       _, _ = w.Write([]byte(buffer.String()))
+}

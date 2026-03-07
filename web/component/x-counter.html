@@ -7,19 +7,15 @@
 </template>
 
 <script>
-    customElements.define('x-counter', class extends HTMLElement {
+    customElements.define('x-counter', class extends ShadowHTMLElement {
         constructor() {
-            super();
-            const template = document.getElementById('x-counter');
-            const templateContent = template.content;
-            this.attachShadow({ mode: 'open' }).appendChild(templateContent.cloneNode(true));
+            super('x-counter');
         }
 
         connectedCallback() {
             this.count = 0;
             this.shadowRoot.getElementById('increment').addEventListener('click', () => {
-                this.count++;
-                this.shadowRoot.getElementById('count').textContent = this.count;
+                this.shadowRoot.getElementById('count').textContent = ++this.count;
             });
         }
     });
