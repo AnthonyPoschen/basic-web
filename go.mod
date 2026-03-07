@@ -1,4 +1,4 @@
-module github.com/AnthonyPoschen/basic-web.git
+module github.com/AnthonyPoschen/basic-web
 
 go 1.25.5
 

@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AnthonyPoschen/basic-web.git/pkg/memfs"
-	"github.com/AnthonyPoschen/basic-web.git/pkg/util"
+	"github.com/AnthonyPoschen/basic-web/pkg/memfs"
+	"github.com/AnthonyPoschen/basic-web/pkg/util"
 )
 
 //go:embed web/*
