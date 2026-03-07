@@ -13,15 +13,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
-
-	"github.com/CAFxX/httpcompression"
 )
 
 var componentManifest []byte
 var componentDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var files fs.FS
-var CompressHandler func(http.Handler) http.Handler
 
 //go:embed js/loader.js
 var js_loader []byte
@@ -59,39 +55,6 @@ func framework(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type statusWriter struct {
-	http.ResponseWriter
-	Status int
-}
-
-func (sw *statusWriter) WriteHeader(code int) {
-	sw.Status = code
-	sw.ResponseWriter.WriteHeader(code)
-}
-func Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if w.Header().Get("Cache-Control") == "" {
-			if IsDev() {
-				w.Header().Set("Cache-Control", "no-cache")
-			} else {
-				w.Header().Set("Cache-Control", "max-age=86400") // 1 day cache expiry
-			}
-		}
-		sw := &statusWriter{ResponseWriter: w, Status: http.StatusOK}
-		start := time.Now()
-		next.ServeHTTP(sw, r)
-
-		slog.Debug("Request:", "Status", sw.Status, "Duration", fmt.Sprintf("%vms", time.Since(start).Milliseconds()), "url", r.URL.Path)
-	})
-}
-
-func CompressFunc(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return CompressHandler(http.HandlerFunc(f))
-}
-func init() {
-	CompressHandler, _ = httpcompression.DefaultAdapter()
-}
-
 func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	files = filesystem
 	// build initial manifest once we know the filesystem
@@ -102,7 +65,7 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	}
 	// add hot reloading if dev
 	if IsDev() {
-		mux.HandleFunc("/dev/reload", HotReloadHandler)
+		mux.Handle("/dev/reload", SSEFunc(HotReloadHandler))
 	}
 	// add component manifest
 	mux.Handle("/framework/", Middleware(CompressFunc(framework)))

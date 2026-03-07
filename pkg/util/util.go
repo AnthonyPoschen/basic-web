@@ -35,13 +35,6 @@ func SetupLogger() {
 
 // HotReloadHandler enables client side hot reloading
 func HotReloadHandler(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.Header.Get("Accept"), "text/event-stream") {
-		http.Error(w, "SSE only", http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
 	l := slog.With("Handler", "HotReload", "client", r.RemoteAddr)
 	l.Debug("client connected")
 	lastChanged := time.Now()
