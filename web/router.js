@@ -12,7 +12,7 @@ const parseQuery = (search) => {
 		if (!(key in query)) query[key] = value;
 		keys.push(key);
 	}
-	return {query, keys};
+	return { query, keys };
 };
 
 const routeDefinitions = [];
@@ -41,7 +41,7 @@ const matchRoute = (pathname) => {
 		}
 
 		if (isMatch) {
-			return {definition: route, params};
+			return { definition: route, params };
 		}
 	}
 
@@ -49,7 +49,7 @@ const matchRoute = (pathname) => {
 };
 
 const buildRouteState = () => {
-	const {query, keys} = parseQuery(window.location.search);
+	const { query, keys } = parseQuery(window.location.search);
 	const matched = matchRoute(window.location.pathname);
 	return {
 		path: normalizePath(window.location.pathname),
@@ -66,7 +66,7 @@ const buildRouteState = () => {
 
 const notifyRouteSubscribers = () => {
 	const route = buildRouteState();
-	window.appRouter.current = route;
+	window.Router.current = route;
 	routeSubscribers.forEach(listener => listener(route));
 	return route;
 };
@@ -77,12 +77,12 @@ const registerRoute = (pattern, component, meta = {}) => {
 		? []
 		: normalizedPattern.slice(1).split('/').map(segment => (
 			segment.startsWith(':')
-				? {type: 'param', name: segment.slice(1)}
-				: {type: 'static', value: segment}
+				? { type: 'param', name: segment.slice(1) }
+				: { type: 'static', value: segment }
 		));
 
-	routeDefinitions.push({pattern: normalizedPattern, component, meta, segments});
-	return window.appRouter;
+	routeDefinitions.push({ pattern: normalizedPattern, component, meta, segments });
+	return window.Router;
 };
 
 const navigate = (target, options = {}) => {
@@ -103,7 +103,7 @@ const navigate = (target, options = {}) => {
 	return notifyRouteSubscribers();
 };
 
-window.appRouter = {
+window.Router = {
 	current: null,
 	register: registerRoute,
 	navigate,
@@ -119,7 +119,7 @@ window.appRouter = {
 
 class RouteView extends HTMLElement {
 	connectedCallback() {
-		this.unsubscribe = window.appRouter.subscribe(route => this.render(route));
+		this.unsubscribe = window.Router.subscribe(route => this.render(route));
 	}
 
 	disconnectedCallback() {
@@ -172,5 +172,5 @@ window.addEventListener('popstate', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-	window.appRouter.start();
+	window.Router.start();
 });
