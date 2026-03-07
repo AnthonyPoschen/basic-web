@@ -2,10 +2,12 @@ package util
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"path"
 	"regexp"
@@ -19,6 +21,54 @@ var componentManifest []byte
 var componentDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var files fs.FS
 var CompressHandler func(http.Handler) http.Handler
+
+//go:embed js/loader.js
+var js_loader []byte
+
+//go:embed js/router.js
+var js_router []byte
+
+//go:embed js/utils.js
+var js_utils []byte
+
+func framework(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if IsDev() {
+		w.Header().Set("Cache-Control", "no-cache")
+	}
+	w.Header().Set("Content-Type", "application/json")
+	var err error
+	switch r.URL.Path {
+	case "/framework/component-manifest.json":
+		_, err = w.Write(componentManifest)
+	case "/framework/loader.js":
+		_, err = w.Write(js_loader)
+	case "/framework/router.js":
+		_, err = w.Write(js_router)
+	case "/framework/utils.js":
+		_, err = w.Write(js_utils)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		slog.Error("Failed to fetching framework resource", "err", err.Error())
+	}
+
+}
+
+func Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if IsDev() {
+			w.Header().Set("Cache-Control", "no-cache")
+		} else {
+			// 1 day cache expiry
+			w.Header().Set("Cache-Control", "max-age=86400")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
 
 func CompressFunc(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return CompressHandler(http.HandlerFunc(f))
@@ -40,13 +90,11 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 		mux.HandleFunc("/dev/reload", HotReloadHandler)
 	}
 	// add component manifest
-	mux.Handle("/component-manifest.json", CompressFunc(componentManifestHandler))
+	mux.Handle("/framework/", Middleware(CompressFunc(framework)))
+	// mux.Handle("/component-manifest.json", Middleware(CompressFunc(componentManifestHandler)))
 
 	//add default http file server
 	mux.Handle("/", CompressFunc(func(w http.ResponseWriter, r *http.Request) {
-		if IsDev() {
-			w.Header().Set("Cache-Control", "no-cache")
-		}
 		if shouldServeIndex(r.URL.Path, files) {
 			http.ServeFileFS(w, r, files, "index.html")
 			return
@@ -56,15 +104,6 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 }
 
 func componentManifestHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	if IsDev() {
-		w.Header().Set("Cache-Control", "no-cache")
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(componentManifest)
 }
 
 func getComponentManifest() ([]byte, error) {

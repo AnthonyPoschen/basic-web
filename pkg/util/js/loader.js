@@ -1,6 +1,6 @@
 const loaded = new Set();
 const componentBasePath = '/component/';
-const componentManifestPath = '/component-manifest.json';
+const componentManifestPath = '/framework/component-manifest.json';
 let componentManifest = {};
 let componentManifestPromise;
 let isScanning = false;
@@ -106,7 +106,7 @@ const runScanLoop = async () => {
 
 const requestScan = () => {
 	scanRequested = true;
- 	void runScanLoop();
+	void runScanLoop();
 };
 
 window.componentLoader = {
