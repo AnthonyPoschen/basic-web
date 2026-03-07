@@ -1,0 +1,26 @@
+<template id="x-counter">
+    <div class="container">
+        <h1>Counter</h1>
+        <p>Current count: <span id="count">0</span></p>
+        <button id="increment">Increment</button>
+    </div>
+</template>
+
+<script>
+    customElements.define('x-counter', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('x-counter');
+            const templateContent = template.content;
+            this.attachShadow({ mode: 'open' }).appendChild(templateContent.cloneNode(true));
+        }
+
+        connectedCallback() {
+            this.count = 0;
+            this.shadowRoot.getElementById('increment').addEventListener('click', () => {
+                this.count++;
+                this.shadowRoot.getElementById('count').textContent = this.count;
+            });
+        }
+    });
+</script>

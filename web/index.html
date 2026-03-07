@@ -2,25 +2,57 @@
 <html>
 
 <head>
-	<script src="loader.js"></script>
-	<link rel="stylesheet" href="./shadcn-classless.css">
+	<script src="/loader.js"></script>
+	<script src="/router.js"></script>
+	<link rel="stylesheet" href="/shadcn-classless.css">
 	<style>
 		:not(:defined) {
 			display: none;
 		}
 
-		:root {}
+		:root {
+			font-family: "Segoe UI", sans-serif;
+		}
+
+		body {
+			max-width: 60rem;
+			margin: 0 auto;
+			padding: 2rem 1rem 4rem;
+		}
+
+		nav {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+			margin-bottom: 2rem;
+		}
+
+		route-view {
+			display: block;
+		}
 
 		@media (prefers-color-scheme: dark) {
 			:root {}
 		}
 	</style>
+	<script>
+		window.appRouter.register('/', 'page-home-new');
+		window.appRouter.register('/items', 'page-items');
+		window.appRouter.register('/items/:uuid', 'page-item');
+		// window.appRouter.register('/items', 'page-home');
+	</script>
 
 </head>
 
 <body>
-	<my-button>hello</my-button>
-	<my-button>hello</my-button>
+	<nav>
+		<a href="/">Home</a>
+		<a href="/items/550e8400-e29b-41d4-a716-446655440000">Path UUID example</a>
+		<a href="/items?uuid=123e4567-e89b-12d3-a456-426614174000">Query UUID example</a>
+		<a href="/items?uuid=abc">TTTTTTT</a>
+	</nav>
+
+	<route-view not-found="page-home"></route-view>
 </body>
 
 </html>

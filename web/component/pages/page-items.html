@@ -1,0 +1,34 @@
+<template id="page-items">
+    <div class="container">
+        <h1>Items</h1>
+        <p>Welcome to the items page!</p>
+        <p>Resolved UUID: <span id="uuid">not provided</span></p>
+        <ul>
+            <li><a href="/items/abc">abc</a></li>
+        </ul>
+    </div>
+</template>
+
+<script>
+    customElements.define('page-items', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('page-items');
+            const templateContent = template.content;
+            this.attachShadow({ mode: 'open' }).appendChild(templateContent.cloneNode(true));
+        }
+
+		connectedCallback() {
+			this.render();
+		}
+
+		render() {
+            console.log(this.route);
+            const routeUuid = this.route?.params?.uuid
+                || this.route?.query?.uuid
+                || this.route?.queryKeys?.includes('uuid') ? this.route.query.uuid : undefined
+                || 'not provided';
+			this.shadowRoot.getElementById('uuid').textContent = routeUuid;
+		}
+    });
+</script>
