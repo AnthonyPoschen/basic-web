@@ -15,7 +15,9 @@ import (
 	"github.com/CAFxX/httpcompression"
 )
 
+var componentManifest []byte
 var componentDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
+var files fs.FS
 var CompressHandler func(http.Handler) http.Handler
 
 func CompressFunc(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
@@ -25,13 +27,14 @@ func init() {
 	CompressHandler, _ = httpcompression.DefaultAdapter()
 }
 
-var componentManifest []byte
-var files fs.FS
-
 func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	files = filesystem
 	// build initial manifest once we know the filesystem
-	buildComponentManifest()
+	var err error
+	componentManifest, err = buildComponentManifest()
+	if err != nil {
+		panic(err)
+	}
 	// add hot reloading if dev
 	if IsDev() {
 		mux.HandleFunc("/dev/reload", HotReloadHandler)

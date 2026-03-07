@@ -34,7 +34,7 @@ func main() {
 	http.Handle("/foo", util.CompressFunc(foo))
 	port := "42069"
 	slog.Info("Server listening", "port", port)
-	err := http.ListenAndServe(":"+port, nil)
+	err := http.ListenAndServe(":"+port, http.DefaultServeMux)
 	if err != nil {
 		slog.Error("server failed to listen and serve", "error", err.Error())
 	}

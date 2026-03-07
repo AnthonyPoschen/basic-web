@@ -70,6 +70,12 @@ func HotReloadHandler(w http.ResponseWriter, r *http.Request) {
 				return nil
 			})
 			if changed {
+				var err error
+				componentManifest, err = buildComponentManifest()
+				if err != nil {
+					slog.Error("Failed to update Components", "err", err.Error())
+					return
+				}
 				fmt.Fprintf(w, "data: reload\n\n")
 				if flusher, ok := w.(http.Flusher); ok {
 					flusher.Flush()
