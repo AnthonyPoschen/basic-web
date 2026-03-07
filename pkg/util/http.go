@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/CAFxX/httpcompression"
 )
@@ -68,17 +69,19 @@ func (sw *statusWriter) WriteHeader(code int) {
 	sw.ResponseWriter.WriteHeader(code)
 }
 func Middleware(next http.Handler) http.Handler {
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if IsDev() {
-			w.Header().Set("Cache-Control", "no-cache")
-		} else {
-			// 1 day cache expiry
-			w.Header().Set("Cache-Control", "max-age=86400")
+		if w.Header().Get("Cache-Control") == "" {
+			if IsDev() {
+				w.Header().Set("Cache-Control", "no-cache")
+			} else {
+				w.Header().Set("Cache-Control", "max-age=86400") // 1 day cache expiry
+			}
 		}
 		sw := &statusWriter{ResponseWriter: w, Status: http.StatusOK}
+		start := time.Now()
 		next.ServeHTTP(sw, r)
-		slog.Debug("Request:", "Status", sw.Status, "url", r.URL.Path)
+
+		slog.Debug("Request:", "Status", sw.Status, "Duration", fmt.Sprintf("%vms", time.Since(start).Milliseconds()), "url", r.URL.Path)
 	})
 }
 
