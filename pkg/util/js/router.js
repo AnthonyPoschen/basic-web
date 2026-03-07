@@ -59,7 +59,7 @@ const buildRouteState = () => {
 		queryKeys: keys,
 		params: matched?.params ?? {},
 		pattern: matched?.definition.pattern ?? null,
-		component: matched?.definition.component ?? null,
+		element: matched?.definition.element ?? null,
 		meta: matched?.definition.meta ?? {},
 	};
 };
@@ -71,7 +71,7 @@ const notifyRouteSubscribers = () => {
 	return route;
 };
 
-const registerRoute = (pattern, component, meta = {}) => {
+const registerRoute = (pattern, element, meta = {}) => {
 	const normalizedPattern = normalizePath(pattern);
 	const segments = normalizedPattern === '/'
 		? []
@@ -81,7 +81,7 @@ const registerRoute = (pattern, component, meta = {}) => {
 				: { type: 'static', value: segment }
 		));
 
-	routeDefinitions.push({ pattern: normalizedPattern, component, meta, segments });
+	routeDefinitions.push({ pattern: normalizedPattern, element, meta, segments });
 	return window.Router;
 };
 
@@ -127,12 +127,12 @@ class RouteView extends HTMLElement {
 	}
 
 	render(route) {
-		const componentName = route.component || this.getAttribute('not-found');
+		const elementName = route.element || this.getAttribute('not-found');
 		this.replaceChildren();
 
-		if (!componentName) return;
+		if (!elementName) return;
 
-		const page = document.createElement(componentName);
+		const page = document.createElement(elementName);
 		page.route = route;
 		page.setAttribute('data-route-path', route.path);
 		if (route.pattern) page.setAttribute('data-route-pattern', route.pattern);
@@ -143,7 +143,7 @@ class RouteView extends HTMLElement {
 			page.setAttribute(`route-query-${key}`, value);
 		});
 		this.appendChild(page);
-		window.componentLoader?.scheduleScan?.();
+		window.elementLoader?.scheduleScan?.();
 	}
 }
 

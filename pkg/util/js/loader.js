@@ -1,38 +1,38 @@
 const loaded = new Set();
-const componentBasePath = '/component/';
-const componentManifestPath = '/framework/component-manifest.json';
-let componentManifest = {};
-let componentManifestPromise;
+const elementBasePath = '/elements/';
+const elementManifestPath = '/framework/element-manifest.json';
+let elementManifest = {};
+let elementManifestPromise;
 let isScanning = false;
 let scanRequested = false;
 
-const loadComponentManifest = () => {
-	if (componentManifestPromise) return componentManifestPromise;
+const loadElementManifest = () => {
+	if (elementManifestPromise) return elementManifestPromise;
 
-	componentManifestPromise = fetch(componentManifestPath)
+	elementManifestPromise = fetch(elementManifestPath)
 		.then(response => {
-			if (!response.ok) throw new Error(`failed to load component manifest: ${response.status}`);
+			if (!response.ok) throw new Error(`failed to load element manifest: ${response.status}`);
 			return response.json();
 		})
 		.then(manifest => {
-			componentManifest = manifest && typeof manifest === 'object' ? manifest : {};
-			return componentManifest;
+			elementManifest = manifest && typeof manifest === 'object' ? manifest : {};
+			return elementManifest;
 		})
 		.catch(error => {
 			console.error(error);
-			componentManifest = {};
-			return componentManifest;
+			elementManifest = {};
+			return elementManifest;
 		});
 
-	return componentManifestPromise;
+	return elementManifestPromise;
 };
 
-const resolveComponentUrl = (name) => {
-	const relativePath = componentManifest[name] || `${name}.html`;
-	return new URL(relativePath, `${window.location.origin}${componentBasePath}`);
+const resolveElementUrl = (name) => {
+	const relativePath = elementManifest[name] || `${name}.html`;
+	return new URL(relativePath, `${window.location.origin}${elementBasePath}`);
 };
 
-const collectUndefinedComponents = () => {
+const collectUndefinedelements = () => {
 	const toLoad = new Set();
 	const walk = (root) => {
 		root.querySelectorAll(':not(:defined)').forEach(el => {
@@ -46,7 +46,7 @@ const collectUndefinedComponents = () => {
 	return toLoad;
 };
 
-const appendComponentAssets = (html, componentUrl) => {
+const appendelementAssets = (html, elementUrl) => {
 	const div = document.createElement('div');
 	div.innerHTML = html;
 	const template = div.querySelector('template');
@@ -55,7 +55,7 @@ const appendComponentAssets = (html, componentUrl) => {
 		const ns = document.createElement('script');
 		if (s.type) ns.type = s.type;
 		if (s.src) {
-			ns.src = new URL(s.getAttribute('src'), componentUrl).href;
+			ns.src = new URL(s.getAttribute('src'), elementUrl).href;
 			ns.async = false;
 		} else {
 			ns.textContent = s.textContent;
@@ -64,17 +64,17 @@ const appendComponentAssets = (html, componentUrl) => {
 	});
 };
 
-const loadComponent = async (name) => {
+const loadElement = async (name) => {
 	loaded.add(name);
-	const componentUrl = resolveComponentUrl(name);
+	const elementUrl = resolveElementUrl(name);
 
 	try {
-		const response = await fetch(componentUrl);
+		const response = await fetch(elementUrl);
 		if (!response.ok) {
-			throw new Error(`failed to load component ${name}: ${response.status}`);
+			throw new Error(`failed to load element ${name}: ${response.status}`);
 		}
 
-		appendComponentAssets(await response.text(), componentUrl);
+		appendelementAssets(await response.text(), elementUrl);
 		scanRequested = true;
 	} catch (error) {
 		loaded.delete(name);
@@ -87,13 +87,13 @@ const runScanLoop = async () => {
 	isScanning = true;
 
 	try {
-		await loadComponentManifest();
+		await loadElementManifest();
 
 		do {
 			scanRequested = false;
-			const names = collectUndefinedComponents();
+			const names = collectUndefinedelements();
 			for (const name of names) {
-				await loadComponent(name);
+				await loadElement(name);
 			}
 		} while (scanRequested);
 	} finally {
@@ -109,9 +109,9 @@ const requestScan = () => {
 	void runScanLoop();
 };
 
-window.componentLoader = {
-	loadManifest: loadComponentManifest,
-	resolveUrl: resolveComponentUrl,
+window.elementLoader = {
+	loadManifest: loadElementManifest,
+	resolveUrl: resolveElementUrl,
 	scan: requestScan,
 	scheduleScan: requestScan,
 };

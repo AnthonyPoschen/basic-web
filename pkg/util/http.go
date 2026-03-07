@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-var componentManifest []byte
-var componentDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
+var elementManifest []byte
+var elementDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var files fs.FS
 
 //go:embed js/loader.js
@@ -39,8 +39,8 @@ func framework(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var err error
 	switch r.URL.Path {
-	case "/framework/component-manifest.json":
-		_, err = w.Write(componentManifest)
+	case "/framework/element-manifest.json":
+		_, err = w.Write(elementManifest)
 	case "/framework/loader.js":
 		_, err = w.Write(js_loader)
 	case "/framework/router.js":
@@ -59,7 +59,7 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	files = filesystem
 	// build initial manifest once we know the filesystem
 	var err error
-	componentManifest, err = buildComponentManifest()
+	elementManifest, err = buildElementManifest()
 	if err != nil {
 		panic(err)
 	}
@@ -67,9 +67,9 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	if IsDev() {
 		mux.Handle("/dev/reload", SSEFunc(HotReloadHandler))
 	}
-	// add component manifest
+	// add element manifest
 	mux.Handle("/framework/", Middleware(CompressFunc(framework)))
-	// mux.Handle("/component-manifest.json", Middleware(CompressFunc(componentManifestHandler)))
+	// mux.Handle("/element-manifest.json", Middleware(CompressFunc(componentManifestHandler)))
 
 	//add default http file server
 	mux.Handle("/", Middleware(CompressFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,15 +86,15 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 	})))
 }
 
-func componentManifestHandler(w http.ResponseWriter, r *http.Request) {
+func elementManifestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
-func getComponentManifest() ([]byte, error) {
-	return componentManifest, nil
+func getelementManifest() ([]byte, error) {
+	return elementManifest, nil
 }
 
-func buildComponentManifest() ([]byte, error) {
-	if _, err := fs.Stat(files, "component"); err != nil {
+func buildElementManifest() ([]byte, error) {
+	if _, err := fs.Stat(files, "elements"); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return []byte("{}"), nil
 		}
@@ -103,7 +103,7 @@ func buildComponentManifest() ([]byte, error) {
 
 	manifest := map[string]string{}
 
-	err := fs.WalkDir(files, "component", func(filePath string, entry fs.DirEntry, err error) error {
+	err := fs.WalkDir(files, "elements", func(filePath string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -116,16 +116,16 @@ func buildComponentManifest() ([]byte, error) {
 			return err
 		}
 
-		matches := componentDefinitionPattern.FindAllSubmatch(contents, -1)
+		matches := elementDefinitionPattern.FindAllSubmatch(contents, -1)
 		if len(matches) == 0 {
 			return nil
 		}
 
-		relativePath := strings.TrimPrefix(filePath, "component/")
+		relativePath := strings.TrimPrefix(filePath, "elements/")
 		for _, match := range matches {
 			name := string(match[1])
 			if existingPath, ok := manifest[name]; ok && existingPath != relativePath {
-				return fmt.Errorf("component %q defined in both %q and %q", name, existingPath, relativePath)
+				return fmt.Errorf("element %q defined in both %q and %q", name, existingPath, relativePath)
 			}
 			manifest[name] = relativePath
 		}

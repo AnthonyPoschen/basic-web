@@ -64,7 +64,7 @@ func HotReloadHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			if changed {
 				var err error
-				componentManifest, err = buildComponentManifest()
+				elementManifest, err = buildElementManifest()
 				if err != nil {
 					slog.Error("Failed to update Components", "err", err.Error())
 					return
