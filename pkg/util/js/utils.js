@@ -6,12 +6,15 @@ function syncStyles() {
 	}
 	globalSheet.replaceSync(`@layer global {\n${css}\n}`);
 }
+syncStyles();
+document.addEventListener('DOMContentLoaded', syncStyles);
 addEventListener('load', syncStyles);
 window.globalSheet = globalSheet;
 
 class ShadowHTMLElement extends HTMLElement {
 	constructor(templateID) {
 		super();
+		syncStyles();
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.adoptedStyleSheets = [window.globalSheet];
 		this.template = document.getElementById(templateID);
