@@ -13,6 +13,10 @@ import (
 var isDev = false
 
 func init() {
+	if os.Getenv("DEV") != "" {
+		isDev = true
+		return
+	}
 	if strings.Contains(os.Args[0], "go-build") {
 		isDev = true
 	}
