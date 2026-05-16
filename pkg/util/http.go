@@ -36,16 +36,19 @@ func framework(w http.ResponseWriter, r *http.Request) {
 	if IsDev() {
 		w.Header().Set("Cache-Control", "no-cache")
 	}
-	w.Header().Set("Content-Type", "application/json")
 	var err error
 	switch r.URL.Path {
 	case "/framework/element-manifest.json":
+		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(elementManifest)
 	case "/framework/loader.js":
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 		_, err = w.Write(js_loader)
 	case "/framework/router.js":
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 		_, err = w.Write(js_router)
 	case "/framework/utils.js":
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 		_, err = w.Write(js_utils)
 	}
 	if err != nil {
