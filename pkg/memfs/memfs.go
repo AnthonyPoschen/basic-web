@@ -3,7 +3,9 @@ package memfs
 import (
 	"bytes"
 	"io/fs"
+	"path"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/tdewolff/minify/v2"
@@ -13,21 +15,24 @@ import (
 )
 
 type MemFS struct {
-	files   map[string][]byte
-	entries []fs.DirEntry
+	files map[string][]byte
+	dirs  map[string][]fs.DirEntry
 }
 
-func NewMemFS(files map[string][]byte, entries []fs.DirEntry) *MemFS {
-	return &MemFS{files: files, entries: entries}
+func NewMemFS(files map[string][]byte, dirs map[string][]fs.DirEntry) *MemFS {
+	return &MemFS{files: files, dirs: dirs}
 }
 
 func (m *MemFS) Open(name string) (fs.File, error) {
 	if name == "." || name == "" {
+		name = "."
+	}
+	if entries, ok := m.dirs[name]; ok {
 		return &memFile{
 			Reader:  bytes.NewReader(nil),
 			name:    name,
 			isDir:   true,
-			entries: m.entries,
+			entries: entries,
 		}, nil
 	}
 	if data, ok := m.files[name]; ok {
@@ -49,9 +54,9 @@ type memFile struct {
 
 func (m *memFile) Stat() (fs.FileInfo, error) {
 	if m.isDir {
-		return &MemFileInfo{name: m.name, isDir: true}, nil
+		return &MemFileInfo{name: path.Base(m.name), isDir: true}, nil
 	}
-	return &MemFileInfo{name: m.name, size: int64(m.Reader.Len())}, nil
+	return &MemFileInfo{name: path.Base(m.name), size: int64(m.Reader.Len())}, nil
 }
 
 func (m *memFile) ReadDir(n int) ([]fs.DirEntry, error) {
@@ -110,7 +115,7 @@ func (m *MemFileInfo) Sys() interface{} {
 
 func CreateMinifiedFS(webFS fs.FS) *MemFS {
 	files := make(map[string][]byte)
-	var entries []fs.DirEntry
+	dirs := map[string][]fs.DirEntry{".": {}}
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
 	m.AddFunc("text/css", css.Minify)
@@ -120,6 +125,8 @@ func CreateMinifiedFS(webFS fs.FS) *MemFS {
 			return err
 		}
 		if d.IsDir() {
+			ensureDir(dirs, path)
+			addDirToParent(dirs, path)
 			return nil
 		}
 		data, err := fs.ReadFile(webFS, path)
@@ -141,8 +148,50 @@ func CreateMinifiedFS(webFS fs.FS) *MemFS {
 			return err
 		}
 		files[path] = minifiedData
-		entries = append(entries, fs.FileInfoToDirEntry(NewMemFileInfo(path, int64(len(minifiedData)))))
+		addFileToParent(dirs, path, len(minifiedData))
 		return nil
 	})
-	return NewMemFS(files, entries)
+	sortDirEntries(dirs)
+	return NewMemFS(files, dirs)
+}
+
+func ensureDir(dirs map[string][]fs.DirEntry, dir string) {
+	if dir == "" {
+		dir = "."
+	}
+	if _, ok := dirs[dir]; !ok {
+		dirs[dir] = nil
+	}
+}
+
+func addDirToParent(dirs map[string][]fs.DirEntry, dir string) {
+	if dir == "." || dir == "" {
+		return
+	}
+	parent := path.Dir(dir)
+	ensureDir(dirs, parent)
+	addDirEntry(dirs, parent, fs.FileInfoToDirEntry(&MemFileInfo{name: path.Base(dir), isDir: true}))
+}
+
+func addFileToParent(dirs map[string][]fs.DirEntry, filePath string, size int) {
+	parent := path.Dir(filePath)
+	ensureDir(dirs, parent)
+	addDirEntry(dirs, parent, fs.FileInfoToDirEntry(NewMemFileInfo(path.Base(filePath), int64(size))))
+}
+
+func addDirEntry(dirs map[string][]fs.DirEntry, dir string, entry fs.DirEntry) {
+	for _, existing := range dirs[dir] {
+		if existing.Name() == entry.Name() {
+			return
+		}
+	}
+	dirs[dir] = append(dirs[dir], entry)
+}
+
+func sortDirEntries(dirs map[string][]fs.DirEntry) {
+	for dir := range dirs {
+		sort.Slice(dirs[dir], func(i, j int) bool {
+			return dirs[dir][i].Name() < dirs[dir][j].Name()
+		})
+	}
 }
