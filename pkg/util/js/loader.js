@@ -27,6 +27,8 @@ const loadElementManifest = () => {
 	return elementManifestPromise;
 };
 
+void loadElementManifest();
+
 const resolveElementUrl = (name) => {
 	const relativePath = elementManifest[name] || `${name}.html`;
 	return new URL(relativePath, `${window.location.origin}${elementBasePath}`);

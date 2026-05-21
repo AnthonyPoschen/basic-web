@@ -28,6 +28,14 @@ var js_router []byte
 //go:embed js/utils.js
 var js_utils []byte
 
+var js_basic_web = bytes.Join([][]byte{
+	js_utils,
+	[]byte("\n;\n"),
+	js_loader,
+	[]byte("\n;\n"),
+	js_router,
+}, nil)
+
 func framework(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -41,15 +49,11 @@ func framework(w http.ResponseWriter, r *http.Request) {
 	case "/framework/element-manifest.json":
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(elementManifest)
-	case "/framework/loader.js":
+	case "/framework/basic-web.js":
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err = w.Write(js_loader)
-	case "/framework/router.js":
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err = w.Write(js_router)
-	case "/framework/utils.js":
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err = w.Write(js_utils)
+		_, err = w.Write(js_basic_web)
+	default:
+		http.NotFound(w, r)
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
