@@ -76,8 +76,17 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 
 	//add default http file server
 	mux.Handle("/", Middleware(CompressFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			serveRobotsTXT(w, r, files)
+			return
+		}
+
 		ok, err := shouldServeIndex(r.URL.Path, files)
 		if err != nil {
+			if isAssetRequest(r.URL.Path) {
+				http.NotFound(w, r)
+				return
+			}
 			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 			return
 		}
@@ -94,6 +103,48 @@ func elementManifestHandler(w http.ResponseWriter, r *http.Request) {
 
 func getelementManifest() ([]byte, error) {
 	return elementManifest, nil
+}
+
+func serveRobotsTXT(w http.ResponseWriter, r *http.Request, files fs.FS) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	if _, err := fs.Stat(files, "robots.txt"); err == nil {
+		http.ServeFileFS(w, r, files, "robots.txt")
+		return
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		http.Error(w, "failed to serve robots.txt", http.StatusInternalServerError)
+		return
+	}
+
+	_, err := w.Write([]byte(defaultRobotsTXT(r, files)))
+	if err != nil {
+		slog.Error("Failed to serve default robots.txt", "err", err.Error())
+	}
+}
+
+func defaultRobotsTXT(r *http.Request, files fs.FS) string {
+	robots := "User-agent: *\nAllow: /\n"
+	if _, err := fs.Stat(files, "sitemap.xml"); err == nil {
+		robots += "\nSitemap: " + requestOrigin(r) + "/sitemap.xml\n"
+	}
+	return robots
+}
+
+func requestOrigin(r *http.Request) string {
+	scheme := r.Header.Get("X-Forwarded-Proto")
+	if scheme != "http" && scheme != "https" {
+		if r.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+	return scheme + "://" + r.Host
 }
 
 func buildElementManifest() ([]byte, error) {
@@ -183,4 +234,8 @@ func shouldServeIndex(requestPath string, files fs.FS) (bool, error) {
 	}
 
 	return !strings.Contains(path.Base(cleanPath), "."), nil
+}
+
+func isAssetRequest(requestPath string) bool {
+	return strings.Contains(path.Base(path.Clean(requestPath)), ".")
 }
