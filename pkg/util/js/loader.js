@@ -48,14 +48,22 @@ const collectUndefinedelements = () => {
 	return toLoad;
 };
 
-const appendelementAssets = (html, elementUrl) => {
+const appendElementAssets = async (html, elementUrl) => {
 	const div = document.createElement('div');
 	div.innerHTML = html;
 	const template = div.querySelector('template');
 	if (template) document.head.appendChild(template);
+	const executions = [];
 	div.querySelectorAll('script').forEach(s => {
 		const ns = document.createElement('script');
 		if (s.type) ns.type = s.type;
+		const waitsForExecution = ns.type === 'module' || Boolean(s.src);
+		if (waitsForExecution) {
+			executions.push(new Promise((resolve, reject) => {
+				ns.addEventListener('load', resolve, { once: true });
+				ns.addEventListener('error', () => reject(new Error(`failed to execute element script: ${elementUrl}`)), { once: true });
+			}));
+		}
 		if (s.src) {
 			ns.src = new URL(s.getAttribute('src'), elementUrl).href;
 			ns.async = false;
@@ -64,6 +72,7 @@ const appendelementAssets = (html, elementUrl) => {
 		}
 		document.head.appendChild(ns);
 	});
+	await Promise.all(executions);
 };
 
 const loadElement = async (name) => {
@@ -76,7 +85,7 @@ const loadElement = async (name) => {
 			throw new Error(`failed to load element ${name}: ${response.status}`);
 		}
 
-		appendelementAssets(await response.text(), elementUrl);
+		await appendElementAssets(await response.text(), elementUrl);
 		scanRequested = true;
 	} catch (error) {
 		loaded.delete(name);
