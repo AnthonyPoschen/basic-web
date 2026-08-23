@@ -1,4 +1,5 @@
 const loaded = new Set();
+const loadsByURL = new Map();
 const elementBasePath = '/elements/';
 const elementManifestPath = '/framework/element-manifest.json';
 const webVersion = document.documentElement.dataset.webVersion || '';
@@ -86,19 +87,27 @@ const appendElementAssets = async (html, elementUrl, elementName) => {
 };
 
 const loadElement = async (name) => {
-	loaded.add(name);
 	const elementUrl = resolveElementUrl(name);
+	const key = elementUrl.href;
+	let load = loadsByURL.get(key);
+	if (!load) {
+		load = (async () => {
+			const response = await fetch(elementUrl);
+			if (!response.ok) {
+				throw new Error(`failed to load element ${name}: ${response.status}`);
+			}
+
+			await appendElementAssets(await response.text(), elementUrl, name);
+		})();
+		loadsByURL.set(key, load);
+	}
 
 	try {
-		const response = await fetch(elementUrl);
-		if (!response.ok) {
-			throw new Error(`failed to load element ${name}: ${response.status}`);
-		}
-
-		await appendElementAssets(await response.text(), elementUrl, name);
+		await load;
+		loaded.add(name);
 		scanRequested = true;
 	} catch (error) {
-		loaded.delete(name);
+		loadsByURL.delete(key);
 		console.error(error);
 	}
 };
