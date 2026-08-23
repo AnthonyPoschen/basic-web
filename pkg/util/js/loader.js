@@ -55,18 +55,21 @@ const collectUndefinedelements = () => {
 	return toLoad;
 };
 
-const appendElementAssets = async (html, elementUrl) => {
+const appendElementAssets = async (html, elementUrl, elementName) => {
 	const div = document.createElement('div');
 	div.innerHTML = html;
 	const template = div.querySelector('template');
 	if (template) document.head.appendChild(template);
-	const executions = [];
+	const moduleDefinitions = [];
 	div.querySelectorAll('script').forEach(s => {
 		const ns = document.createElement('script');
 		if (s.type) ns.type = s.type;
-		const waitsForExecution = ns.type === 'module' || Boolean(s.src);
-		if (waitsForExecution) {
-			executions.push(new Promise((resolve, reject) => {
+		if (ns.type === 'module') {
+			// Inline module scripts do not reliably emit a load event when injected.
+			// The custom-element definition is the completion signal the loader needs.
+			moduleDefinitions.push(customElements.whenDefined(elementName));
+		} else if (s.src) {
+			moduleDefinitions.push(new Promise((resolve, reject) => {
 				ns.addEventListener('load', resolve, { once: true });
 				ns.addEventListener('error', () => reject(new Error(`failed to execute element script: ${elementUrl}`)), { once: true });
 			}));
@@ -79,7 +82,7 @@ const appendElementAssets = async (html, elementUrl) => {
 		}
 		document.head.appendChild(ns);
 	});
-	await Promise.all(executions);
+	await Promise.all(moduleDefinitions);
 };
 
 const loadElement = async (name) => {
@@ -92,7 +95,7 @@ const loadElement = async (name) => {
 			throw new Error(`failed to load element ${name}: ${response.status}`);
 		}
 
-		await appendElementAssets(await response.text(), elementUrl);
+		await appendElementAssets(await response.text(), elementUrl, name);
 		scanRequested = true;
 	} catch (error) {
 		loaded.delete(name);
