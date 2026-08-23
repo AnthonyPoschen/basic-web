@@ -1,6 +1,7 @@
 const loaded = new Set();
 const elementBasePath = '/elements/';
 const elementManifestPath = '/framework/element-manifest.json';
+const webVersion = document.documentElement.dataset.webVersion || '';
 let elementManifest = {};
 let elementManifestPromise;
 let isScanning = false;
@@ -9,7 +10,7 @@ let scanRequested = false;
 const loadElementManifest = () => {
 	if (elementManifestPromise) return elementManifestPromise;
 
-	elementManifestPromise = fetch(elementManifestPath)
+	elementManifestPromise = fetch(versionedUrl(elementManifestPath))
 		.then(response => {
 			if (!response.ok) throw new Error(`failed to load element manifest: ${response.status}`);
 			return response.json();
@@ -27,11 +28,17 @@ const loadElementManifest = () => {
 	return elementManifestPromise;
 };
 
+const versionedUrl = (path, base = window.location.origin) => {
+	const url = new URL(path, base);
+	if (webVersion) url.searchParams.set('v', webVersion);
+	return url;
+};
+
 void loadElementManifest();
 
 const resolveElementUrl = (name) => {
 	const relativePath = elementManifest[name] || `${name}.html`;
-	return new URL(relativePath, `${window.location.origin}${elementBasePath}`);
+	return versionedUrl(relativePath, `${window.location.origin}${elementBasePath}`);
 };
 
 const collectUndefinedelements = () => {
