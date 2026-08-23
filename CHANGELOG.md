@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.20260823.0 - 2026-08-23
+
+### Fixed
+
+- Install every template from a component file so files that define multiple custom elements render each element with its matching template.
+- Deduplicate component loads by resolved file URL while an element definition is pending, avoiding duplicate custom-element registration for shared component files.
+
 ## v0.20260521.1 - 2026-05-21
 
 ### Breaking

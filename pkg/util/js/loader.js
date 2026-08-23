@@ -59,8 +59,7 @@ const collectUndefinedelements = () => {
 const appendElementAssets = async (html, elementUrl, elementName) => {
 	const div = document.createElement('div');
 	div.innerHTML = html;
-	const template = div.querySelector('template');
-	if (template) document.head.appendChild(template);
+	div.querySelectorAll('template').forEach(template => document.head.appendChild(template));
 	const moduleDefinitions = [];
 	div.querySelectorAll('script').forEach(s => {
 		const ns = document.createElement('script');
