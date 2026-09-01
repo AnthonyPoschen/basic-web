@@ -24,6 +24,7 @@ var elementManifest []byte
 var elementDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var elementTemplatePattern = regexp.MustCompile(`(?is)<template\b[^>]*>(.*?)</template>`)
 var elementTagPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s|/?>)`)
+var elementCreatePattern = regexp.MustCompile(`(?i)\bdocument\.createElement\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]\s*\)`)
 var elementScriptPattern = regexp.MustCompile(`(?is)<script\b([^>]*)>(.*?)</script>`)
 var moduleScriptTypePattern = regexp.MustCompile(`(?i)(?:^|\s)type\s*=\s*(?:"module"|'module'|module)(?:\s|$)`)
 var files fs.FS
@@ -217,6 +218,9 @@ func buildElementManifest() ([]byte, error) {
 			for _, tagMatch := range elementTagPattern.FindAllSubmatch(templateMatch[1], -1) {
 				fileDependencies[string(tagMatch[1])] = struct{}{}
 			}
+		}
+		for _, createMatch := range elementCreatePattern.FindAllSubmatch(contents, -1) {
+			fileDependencies[string(createMatch[1])] = struct{}{}
 		}
 		fileModuleImports := staticModuleImports(contents)
 

@@ -41,6 +41,7 @@ func TestElementManifestIncludesLocalStaticModuleImports(t *testing.T) {
   import helper from "./helper.js"
   import "package-name"
   import("/scripts/dynamic.js")
+  const card = document.createElement('game-card')
   customElements.define("page-example", class extends ShadowHTMLElement {})
 </script>`)},
 	})
@@ -52,6 +53,7 @@ func TestElementManifestIncludesLocalStaticModuleImports(t *testing.T) {
 	}
 
 	var manifest struct {
+		Dependencies  map[string][]string `json:"dependencies"`
 		ModuleImports map[string][]string `json:"moduleImports"`
 	}
 	if err := json.Unmarshal(response.Body.Bytes(), &manifest); err != nil {
@@ -66,5 +68,10 @@ func TestElementManifestIncludesLocalStaticModuleImports(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("module imports = %v, want %v", got, want)
 		}
+	}
+
+	dependencies := manifest.Dependencies["page-example"]
+	if len(dependencies) != 1 || dependencies[0] != "game-card" {
+		t.Fatalf("dependencies = %v, want [game-card]", dependencies)
 	}
 }
