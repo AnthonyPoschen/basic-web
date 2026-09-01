@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.20260901.1 - 2026-09-01
+
+### Changed
+
+- Start route hydration when the route outlet connects so component requests can overlap deferred third-party scripts instead of waiting for `DOMContentLoaded`.
+- Keep route content marked busy until hydration and follow-up scans complete, then reveal the final route on the next animation frame.
+
+### Fixed
+
+- Serve the SPA entry point for unknown non-asset paths, preserving client-side routes on direct navigation.
+
 ## v0.20260901.0 - 2026-09-01
 
 ### Changed
