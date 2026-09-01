@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Hydrate route component trees atomically: direct template dependencies now fetch concurrently and become visible only after their modules are registered.
+- Avoid rebuilding the shared adopted stylesheet for every custom-element construction.
+
 ## v0.20260823.0 - 2026-08-23
 
 ### Fixed

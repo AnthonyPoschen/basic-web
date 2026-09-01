@@ -143,7 +143,7 @@ class RouteView extends HTMLElement {
 			page.setAttribute(`route-query-${key}`, value);
 		});
 		this.appendChild(page);
-		window.elementLoader?.scheduleScan?.();
+		window.elementLoader?.hydrate?.(page) ?? window.elementLoader?.scheduleScan?.();
 	}
 }
 
