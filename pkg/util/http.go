@@ -97,6 +97,7 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 			return
 		}
 		if ok {
+			w.Header().Set("Link", "</framework/element-manifest.json>; rel=preload; as=fetch; crossorigin")
 			http.ServeFileFS(w, r, files, "index.html")
 			return
 		}
