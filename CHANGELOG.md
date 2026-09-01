@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.20260901.4 - 2026-09-01
+
+### Added
+
+- Discover literal custom-element `document.createElement(...)` calls when generating static element dependency trees.
+
 ## v0.20260901.3 - 2026-09-01
 
 ### Added
