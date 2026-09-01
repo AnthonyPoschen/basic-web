@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"sort"
@@ -38,36 +39,49 @@ var js_basic_web = bytes.Join([][]byte{
 	js_router,
 }, nil)
 
-func framework(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	if IsDev() {
-		w.Header().Set("Cache-Control", "no-cache")
-	}
-	var err error
-	switch r.URL.Path {
-	case "/framework/element-manifest.json":
-		// The HTML response preloads this exact URL. Keep it revalidatable so
-		// a newly deployed shell cannot pair with an older dependency graph.
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(elementManifest)
-	case "/framework/basic-web.js":
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err = w.Write(js_basic_web)
-	default:
-		http.NotFound(w, r)
-	}
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		slog.Error("Failed to fetching framework resource", "err", err.Error())
-	}
+// SetupHttpMuxOptions configures cache behavior for framework resources.
+type SetupHttpMuxOptions struct {
+	WebVersion string
+}
 
+func framework(webVersion string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if IsDev() {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		var err error
+		switch r.URL.Path {
+		case "/framework/element-manifest.json":
+			if webVersion != "" && webVersion != "dev" && r.URL.Query().Get("v") == webVersion {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, err = w.Write(elementManifest)
+		case "/framework/basic-web.js":
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			_, err = w.Write(js_basic_web)
+		default:
+			http.NotFound(w, r)
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			slog.Error("Failed to fetching framework resource", "err", err.Error())
+		}
+	}
 }
 
 func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
+	SetupHttpMuxWithOptions(mux, filesystem, SetupHttpMuxOptions{})
+}
+
+// SetupHttpMuxWithOptions registers framework and static-file handlers.
+func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options SetupHttpMuxOptions) {
 	files = filesystem
 	// build initial manifest once we know the filesystem
 	var err error
@@ -80,7 +94,7 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 		mux.Handle("/dev/reload", SSEFunc(HotReloadHandler))
 	}
 	// add element manifest
-	mux.Handle("/framework/", Middleware(CompressFunc(framework)))
+	mux.Handle("/framework/", Middleware(CompressHandler(framework(options.WebVersion))))
 	// mux.Handle("/element-manifest.json", Middleware(CompressFunc(componentManifestHandler)))
 
 	//add default http file server
@@ -100,7 +114,11 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 			return
 		}
 		if ok {
-			w.Header().Set("Link", "</framework/element-manifest.json>; rel=preload; as=fetch; crossorigin")
+			manifestURL := "/framework/element-manifest.json"
+			if options.WebVersion != "" && options.WebVersion != "dev" {
+				manifestURL += "?v=" + url.QueryEscape(options.WebVersion)
+			}
+			w.Header().Set("Link", "<"+manifestURL+">; rel=preload; as=fetch; crossorigin")
 			http.ServeFileFS(w, r, files, "index.html")
 			return
 		}
