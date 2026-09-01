@@ -128,6 +128,7 @@ window.Router = {
     return () => routeSubscribers.delete(listener);
   },
   start() {
+    if (this.current) return this.current;
     return notifyRouteSubscribers();
   },
 };
@@ -140,6 +141,7 @@ class RouteView extends HTMLElement {
 
   connectedCallback() {
     this.unsubscribe = window.Router.subscribe((route) => this.render(route));
+    queueMicrotask(() => window.Router.start());
   }
 
   disconnectedCallback() {
