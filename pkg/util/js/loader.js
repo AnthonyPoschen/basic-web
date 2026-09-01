@@ -25,8 +25,11 @@ const loadElementManifest = () => {
       return response.json();
     })
     .then((manifest) => {
-      elementManifest =
-        manifest && typeof manifest === "object" ? manifest : {};
+      if (manifest?.elements && typeof manifest.elements === "object") {
+        elementManifest = manifest;
+      } else {
+        elementManifest = { elements: manifest || {}, dependencies: {} };
+      }
       return elementManifest;
     })
     .catch((error) => {
@@ -47,12 +50,15 @@ const versionedUrl = (path, base = window.location.origin) => {
 void loadElementManifest();
 
 const resolveElementUrl = (name) => {
-  const relativePath = elementManifest[name] || `${name}.html`;
+  const relativePath = elementManifest.elements?.[name] || `${name}.html`;
   return versionedUrl(
     relativePath,
     `${window.location.origin}${elementBasePath}`,
   );
 };
+
+const getManifestDependencies = (name) =>
+  elementManifest.dependencies?.[name] || [];
 
 const elementName = (element) => element.tagName.toLowerCase();
 
@@ -185,33 +191,42 @@ const installElementSource = (source) => {
 const loadElementTree = async (initialNames) => {
   await loadElementManifest();
 
-  const namesToVisit = new Set(initialNames);
-  const visitedNames = new Set();
+  const namesToLoad = new Set(initialNames);
+  const scheduledNames = new Set();
   const sources = new Map();
 
-  while (namesToVisit.size > 0) {
-    const names = [...namesToVisit];
-    namesToVisit.clear();
-    const newNames = names.filter((name) => {
-      if (visitedNames.has(name)) return false;
-      visitedNames.add(name);
-      return (
-        name.includes("-") && !loaded.has(name) && !customElements.get(name)
-      );
-    });
-    if (newNames.length === 0) continue;
+  while (namesToLoad.size > 0) {
+    const names = [];
+    const namesToVisit = [...namesToLoad];
+    namesToLoad.clear();
 
-    const batch = await Promise.all(newNames.map(loadElementSource));
+    while (namesToVisit.length > 0) {
+      const name = namesToVisit.pop();
+      if (scheduledNames.has(name)) continue;
+      if (!name.includes("-") || loaded.has(name) || customElements.get(name)) {
+        continue;
+      }
+
+      scheduledNames.add(name);
+      names.push(name);
+      getManifestDependencies(name).forEach((dependency) => {
+        namesToVisit.push(dependency);
+      });
+    }
+
+    if (names.length === 0) continue;
+
+    const batch = await Promise.all(names.map(loadElementSource));
     batch.forEach((source) => {
       sources.set(source.elementUrl.href, source);
       source.dependencies.forEach((dependency) => {
-        if (!visitedNames.has(dependency)) namesToVisit.add(dependency);
+        if (!scheduledNames.has(dependency)) namesToLoad.add(dependency);
       });
     });
   }
 
   await Promise.all([...sources.values()].map(installElementSource));
-  visitedNames.forEach((name) => {
+  scheduledNames.forEach((name) => {
     if (customElements.get(name)) loaded.add(name);
   });
   scanRequested = true;

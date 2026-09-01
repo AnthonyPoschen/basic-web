@@ -17,6 +17,8 @@ import (
 
 var elementManifest []byte
 var elementDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
+var elementTemplatePattern = regexp.MustCompile(`(?is)<template\b[^>]*>(.*?)</template>`)
+var elementTagPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s|/?>)`)
 var files fs.FS
 
 //go:embed js/loader.js
@@ -160,6 +162,7 @@ func buildElementManifest() ([]byte, error) {
 	}
 
 	manifest := map[string]string{}
+	dependencies := map[string][]string{}
 
 	err := fs.WalkDir(files, "elements", func(filePath string, entry fs.DirEntry, err error) error {
 		if err != nil {
@@ -180,12 +183,28 @@ func buildElementManifest() ([]byte, error) {
 		}
 
 		relativePath := strings.TrimPrefix(filePath, "elements/")
+		fileDependencies := map[string]struct{}{}
+		for _, templateMatch := range elementTemplatePattern.FindAllSubmatch(contents, -1) {
+			for _, tagMatch := range elementTagPattern.FindAllSubmatch(templateMatch[1], -1) {
+				fileDependencies[string(tagMatch[1])] = struct{}{}
+			}
+		}
+
 		for _, match := range matches {
 			name := string(match[1])
 			if existingPath, ok := manifest[name]; ok && existingPath != relativePath {
 				return fmt.Errorf("element %q defined in both %q and %q", name, existingPath, relativePath)
 			}
 			manifest[name] = relativePath
+
+			dependencyNames := make([]string, 0, len(fileDependencies))
+			for dependency := range fileDependencies {
+				if dependency != name {
+					dependencyNames = append(dependencyNames, dependency)
+				}
+			}
+			sort.Strings(dependencyNames)
+			dependencies[name] = dependencyNames
 		}
 
 		return nil
@@ -194,34 +213,15 @@ func buildElementManifest() ([]byte, error) {
 		return nil, err
 	}
 
-	keys := make([]string, 0, len(manifest))
-	for key := range manifest {
-		keys = append(keys, key)
+	manifestDocument := struct {
+		Elements     map[string]string   `json:"elements"`
+		Dependencies map[string][]string `json:"dependencies"`
+	}{
+		Elements:     manifest,
+		Dependencies: dependencies,
 	}
-	sort.Strings(keys)
 
-	buffer := bytes.NewBufferString("{")
-	for index, key := range keys {
-		if index > 0 {
-			buffer.WriteByte(',')
-		}
-
-		encodedKey, err := json.Marshal(key)
-		if err != nil {
-			return nil, err
-		}
-		encodedPath, err := json.Marshal(manifest[key])
-		if err != nil {
-			return nil, err
-		}
-
-		buffer.Write(encodedKey)
-		buffer.WriteByte(':')
-		buffer.Write(encodedPath)
-	}
-	buffer.WriteByte('}')
-
-	return buffer.Bytes(), nil
+	return json.Marshal(manifestDocument)
 }
 func shouldServeIndex(requestPath string, files fs.FS) (bool, error) {
 	if requestPath == "/" {
