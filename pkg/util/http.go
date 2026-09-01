@@ -234,6 +234,9 @@ func shouldServeIndex(requestPath string, files fs.FS) (bool, error) {
 	}
 
 	if _, err := fs.Stat(files, cleanPath); err != nil {
+		if errors.Is(err, fs.ErrNotExist) && !isAssetRequest(requestPath) {
+			return true, nil
+		}
 		return false, err
 	}
 

@@ -1,204 +1,238 @@
 const normalizePath = (pathname) => {
-	if (!pathname || pathname === '/') return '/';
-	const normalized = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
-	return normalized || '/';
+  if (!pathname || pathname === "/") return "/";
+  const normalized =
+    pathname.endsWith("/") && pathname !== "/"
+      ? pathname.slice(0, -1)
+      : pathname;
+  return normalized || "/";
 };
 
 const parseQuery = (search) => {
-	const params = new URLSearchParams(search);
-	const query = {};
-	const keys = [];
-	for (const [key, value] of params.entries()) {
-		if (!(key in query)) query[key] = value;
-		keys.push(key);
-	}
-	return { query, keys };
+  const params = new URLSearchParams(search);
+  const query = {};
+  const keys = [];
+  for (const [key, value] of params.entries()) {
+    if (!(key in query)) query[key] = value;
+    keys.push(key);
+  }
+  return { query, keys };
 };
 
 const routeDefinitions = [];
 const routeSubscribers = new Set();
 
 const matchRoute = (pathname) => {
-	const normalizedPath = normalizePath(pathname);
-	const pathSegments = normalizedPath === '/' ? [] : normalizedPath.slice(1).split('/').map(decodeURIComponent);
+  const normalizedPath = normalizePath(pathname);
+  const pathSegments =
+    normalizedPath === "/"
+      ? []
+      : normalizedPath.slice(1).split("/").map(decodeURIComponent);
 
-	for (const route of routeDefinitions) {
-		if (route.segments.length !== pathSegments.length) continue;
+  for (const route of routeDefinitions) {
+    if (route.segments.length !== pathSegments.length) continue;
 
-		const params = {};
-		let isMatch = true;
-		for (let index = 0; index < route.segments.length; index++) {
-			const routeSegment = route.segments[index];
-			const pathSegment = pathSegments[index];
-			if (routeSegment.type === 'param') {
-				params[routeSegment.name] = pathSegment;
-				continue;
-			}
-			if (routeSegment.value !== pathSegment) {
-				isMatch = false;
-				break;
-			}
-		}
+    const params = {};
+    let isMatch = true;
+    for (let index = 0; index < route.segments.length; index++) {
+      const routeSegment = route.segments[index];
+      const pathSegment = pathSegments[index];
+      if (routeSegment.type === "param") {
+        params[routeSegment.name] = pathSegment;
+        continue;
+      }
+      if (routeSegment.value !== pathSegment) {
+        isMatch = false;
+        break;
+      }
+    }
 
-		if (isMatch) {
-			return { definition: route, params };
-		}
-	}
+    if (isMatch) {
+      return { definition: route, params };
+    }
+  }
 
-	return null;
+  return null;
 };
 
 const buildRouteState = () => {
-	const { query, keys } = parseQuery(window.location.search);
-	const matched = matchRoute(window.location.pathname);
-	return {
-		path: normalizePath(window.location.pathname),
-		search: window.location.search,
-		hash: window.location.hash,
-		query,
-		queryKeys: keys,
-		params: matched?.params ?? {},
-		pattern: matched?.definition.pattern ?? null,
-		element: matched?.definition.element ?? null,
-		meta: matched?.definition.meta ?? {},
-	};
+  const { query, keys } = parseQuery(window.location.search);
+  const matched = matchRoute(window.location.pathname);
+  return {
+    path: normalizePath(window.location.pathname),
+    search: window.location.search,
+    hash: window.location.hash,
+    query,
+    queryKeys: keys,
+    params: matched?.params ?? {},
+    pattern: matched?.definition.pattern ?? null,
+    element: matched?.definition.element ?? null,
+    meta: matched?.definition.meta ?? {},
+  };
 };
 
 const notifyRouteSubscribers = () => {
-	const route = buildRouteState();
-	window.Router.current = route;
-	routeSubscribers.forEach(listener => listener(route));
-	return route;
+  const route = buildRouteState();
+  window.Router.current = route;
+  routeSubscribers.forEach((listener) => listener(route));
+  return route;
 };
 
 const registerRoute = (pattern, element, meta = {}) => {
-	const normalizedPattern = normalizePath(pattern);
-	const segments = normalizedPattern === '/'
-		? []
-		: normalizedPattern.slice(1).split('/').map(segment => (
-			segment.startsWith(':')
-				? { type: 'param', name: segment.slice(1) }
-				: { type: 'static', value: segment }
-		));
+  const normalizedPattern = normalizePath(pattern);
+  const segments =
+    normalizedPattern === "/"
+      ? []
+      : normalizedPattern
+          .slice(1)
+          .split("/")
+          .map((segment) =>
+            segment.startsWith(":")
+              ? { type: "param", name: segment.slice(1) }
+              : { type: "static", value: segment },
+          );
 
-	routeDefinitions.push({ pattern: normalizedPattern, element, meta, segments });
-	return window.Router;
+  routeDefinitions.push({
+    pattern: normalizedPattern,
+    element,
+    meta,
+    segments,
+  });
+  return window.Router;
 };
 
 const navigate = (target, options = {}) => {
-	const nextUrl = new URL(target, window.location.origin);
-	const nextPath = `${normalizePath(nextUrl.pathname)}${nextUrl.search}${nextUrl.hash}`;
-	const currentPath = `${normalizePath(window.location.pathname)}${window.location.search}${window.location.hash}`;
+  const nextUrl = new URL(target, window.location.origin);
+  const nextPath = `${normalizePath(nextUrl.pathname)}${nextUrl.search}${nextUrl.hash}`;
+  const currentPath = `${normalizePath(window.location.pathname)}${window.location.search}${window.location.hash}`;
 
-	if (nextPath === currentPath) {
-		return notifyRouteSubscribers();
-	}
+  if (nextPath === currentPath) {
+    return notifyRouteSubscribers();
+  }
 
-	if (!options.replace) {
-		window.history.pushState({}, '', nextPath);
-	} else {
-		window.history.replaceState({}, '', nextPath);
-	}
+  if (!options.replace) {
+    window.history.pushState({}, "", nextPath);
+  } else {
+    window.history.replaceState({}, "", nextPath);
+  }
 
-	return notifyRouteSubscribers();
+  return notifyRouteSubscribers();
 };
 
 window.Router = {
-	current: null,
-	register: registerRoute,
-	navigate,
-	subscribe(listener) {
-		routeSubscribers.add(listener);
-		if (this.current) listener(this.current);
-		return () => routeSubscribers.delete(listener);
-	},
-	start() {
-		return notifyRouteSubscribers();
-	},
+  current: null,
+  register: registerRoute,
+  navigate,
+  subscribe(listener) {
+    routeSubscribers.add(listener);
+    if (this.current) listener(this.current);
+    return () => routeSubscribers.delete(listener);
+  },
+  start() {
+    return notifyRouteSubscribers();
+  },
 };
 
 class RouteView extends HTMLElement {
-	connectedCallback() {
-		this.unsubscribe = window.Router.subscribe(route => this.render(route));
-	}
+  constructor() {
+    super();
+    this.renderVersion = 0;
+  }
 
-	disconnectedCallback() {
-		this.unsubscribe?.();
-	}
+  connectedCallback() {
+    this.unsubscribe = window.Router.subscribe((route) => this.render(route));
+  }
 
-	render(route) {
-		const elementName = route.element || this.getAttribute('not-found');
-		this.replaceChildren();
+  disconnectedCallback() {
+    this.unsubscribe?.();
+  }
 
-		if (!elementName) return;
+  async render(route) {
+    const renderVersion = ++this.renderVersion;
+    const elementName = route.element || this.getAttribute("not-found");
+    this.setAttribute("data-route-loading", "");
+    this.setAttribute("aria-busy", "true");
+    this.replaceChildren();
 
-		const page = document.createElement(elementName);
-		page.route = route;
-		page.setAttribute('data-route-path', route.path);
-		if (route.pattern) page.setAttribute('data-route-pattern', route.pattern);
-		Object.entries(route.params).forEach(([key, value]) => {
-			page.setAttribute(`route-param-${key}`, value);
-		});
-		Object.entries(route.query).forEach(([key, value]) => {
-			page.setAttribute(`route-query-${key}`, value);
-		});
-		this.appendChild(page);
-		window.elementLoader?.hydrate?.(page) ?? window.elementLoader?.scheduleScan?.();
-	}
+    if (!elementName) {
+      this.removeAttribute("data-route-loading");
+      this.setAttribute("aria-busy", "false");
+      return;
+    }
+
+    const page = document.createElement(elementName);
+    page.route = route;
+    page.setAttribute("data-route-path", route.path);
+    if (route.pattern) page.setAttribute("data-route-pattern", route.pattern);
+    Object.entries(route.params).forEach(([key, value]) => {
+      page.setAttribute(`route-param-${key}`, value);
+    });
+    Object.entries(route.query).forEach(([key, value]) => {
+      page.setAttribute(`route-query-${key}`, value);
+    });
+    this.appendChild(page);
+    await window.elementLoader?.hydrate?.(page);
+
+    if (renderVersion !== this.renderVersion) return;
+
+    requestAnimationFrame(() => {
+      if (renderVersion !== this.renderVersion) return;
+      this.removeAttribute("data-route-loading");
+      this.setAttribute("aria-busy", "false");
+    });
+  }
 }
 
-customElements.define('route-view', RouteView);
+customElements.define("route-view", RouteView);
 
-const hasHxNavigation = (element) => (
-	element.hasAttribute('hx-boost')
-	|| element.hasAttribute('hx-get')
-	|| element.hasAttribute('hx-post')
-	|| element.hasAttribute('hx-put')
-	|| element.hasAttribute('hx-patch')
-	|| element.hasAttribute('hx-delete')
-);
+const hasHxNavigation = (element) =>
+  element.hasAttribute("hx-boost") ||
+  element.hasAttribute("hx-get") ||
+  element.hasAttribute("hx-post") ||
+  element.hasAttribute("hx-put") ||
+  element.hasAttribute("hx-patch") ||
+  element.hasAttribute("hx-delete");
 
 const findLinkTarget = (event) => {
-	for (const target of event.composedPath()) {
-		if (!(target instanceof Element)) continue;
-		if (target.matches('a[href]')) return target;
-	}
-	return null;
+  for (const target of event.composedPath()) {
+    if (!(target instanceof Element)) continue;
+    if (target.matches("a[href]")) return target;
+  }
+  return null;
 };
 
 const shouldHandleLink = (link) => {
-	if (link.target && link.target !== '_self') return false;
-	if (link.hasAttribute('download')) return false;
-	if (link.hasAttribute('data-router-ignore')) return false;
-	if (hasHxNavigation(link)) return false;
+  if (link.target && link.target !== "_self") return false;
+  if (link.hasAttribute("download")) return false;
+  if (link.hasAttribute("data-router-ignore")) return false;
+  if (hasHxNavigation(link)) return false;
 
-	const url = new URL(link.href, window.location.href);
-	if (url.origin !== window.location.origin) return false;
-	if (!url.pathname.startsWith('/')) return false;
-	if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+  const url = new URL(link.href, window.location.href);
+  if (url.origin !== window.location.origin) return false;
+  if (!url.pathname.startsWith("/")) return false;
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
 
-	return true;
+  return true;
 };
 
-document.addEventListener('click', event => {
-	if (event.defaultPrevented) return;
-	if (event.button !== 0) return;
-	if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+document.addEventListener("click", (event) => {
+  if (event.defaultPrevented) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-	const link = findLinkTarget(event);
-	if (!link) return;
-	if (!shouldHandleLink(link)) return;
+  const link = findLinkTarget(event);
+  if (!link) return;
+  if (!shouldHandleLink(link)) return;
 
-	const url = new URL(link.href, window.location.href);
+  const url = new URL(link.href, window.location.href);
 
-	event.preventDefault();
-	navigate(`${url.pathname}${url.search}${url.hash}`);
+  event.preventDefault();
+  navigate(`${url.pathname}${url.search}${url.hash}`);
 });
 
-window.addEventListener('popstate', () => {
-	notifyRouteSubscribers();
+window.addEventListener("popstate", () => {
+  notifyRouteSubscribers();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-	window.Router.start();
+document.addEventListener("DOMContentLoaded", () => {
+  window.Router.start();
 });
