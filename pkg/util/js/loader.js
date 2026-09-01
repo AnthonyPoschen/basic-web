@@ -318,14 +318,31 @@ if (window.location.hostname === "localhost") {
     location.reload();
   };
 }
-// Auto-scan shadow DOM + light DOM changes
+const nodeContainsUndefinedElement = (node) => {
+  if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
+    return false;
+  }
+
+  if (node.nodeType === Node.ELEMENT_NODE && isLoadableElement(node)) {
+    return true;
+  }
+
+  return [...node.querySelectorAll(":not(:defined)")].some(isLoadableElement);
+};
+
+// Auto-scan shadow DOM + light DOM additions that may contain components.
 const origAttach = Element.prototype.attachShadow;
 Element.prototype.attachShadow = function (...a) {
   const sr = origAttach.apply(this, a);
   requestScan();
   return sr;
 };
-new MutationObserver(() => requestScan()).observe(document.documentElement, {
+new MutationObserver((records) => {
+  if (records.some((record) =>
+    [...record.addedNodes].some(nodeContainsUndefinedElement))) {
+    requestScan();
+  }
+}).observe(document.documentElement, {
   childList: true,
   subtree: true,
 });
