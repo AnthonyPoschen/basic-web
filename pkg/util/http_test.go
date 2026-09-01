@@ -1,6 +1,8 @@
 package util
 
 import (
+	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"testing/fstest"
@@ -26,5 +28,43 @@ func TestDefaultRobotsTXTIncludesExistingSitemap(t *testing.T) {
 	want := "User-agent: *\nAllow: /\n\nSitemap: https://example.test/sitemap.xml\n"
 	if got != want {
 		t.Fatalf("defaultRobotsTXT() = %q, want %q", got, want)
+	}
+}
+
+func TestElementManifestIncludesLocalStaticModuleImports(t *testing.T) {
+	mux := http.NewServeMux()
+	SetupHttpMux(mux, fstest.MapFS{
+		"elements/pages/example.html": &fstest.MapFile{Data: []byte(`
+<template id="page-example"></template>
+<script type="module">
+  import "/scripts/shared.js"
+  import helper from "./helper.js"
+  import "package-name"
+  import("/scripts/dynamic.js")
+  customElements.define("page-example", class extends ShadowHTMLElement {})
+</script>`)},
+	})
+
+	response := httptest.NewRecorder()
+	mux.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/framework/element-manifest.json", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("manifest response status = %d, want %d", response.Code, http.StatusOK)
+	}
+
+	var manifest struct {
+		ModuleImports map[string][]string `json:"moduleImports"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &manifest); err != nil {
+		t.Fatalf("decode manifest: %v", err)
+	}
+	want := []string{"./helper.js", "/scripts/shared.js"}
+	got := manifest.ModuleImports["page-example"]
+	if len(got) != len(want) {
+		t.Fatalf("module imports = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("module imports = %v, want %v", got, want)
+		}
 	}
 }

@@ -13,13 +13,19 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/tdewolff/parse/v2"
+	jsparser "github.com/tdewolff/parse/v2/js"
 )
 
 var elementManifest []byte
 var elementDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var elementTemplatePattern = regexp.MustCompile(`(?is)<template\b[^>]*>(.*?)</template>`)
 var elementTagPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s|/?>)`)
+var elementScriptPattern = regexp.MustCompile(`(?is)<script\b([^>]*)>(.*?)</script>`)
+var moduleScriptTypePattern = regexp.MustCompile(`(?i)(?:^|\s)type\s*=\s*(?:"module"|'module'|module)(?:\s|$)`)
 var files fs.FS
 
 //go:embed js/loader.js
@@ -185,6 +191,7 @@ func buildElementManifest() ([]byte, error) {
 
 	manifest := map[string]string{}
 	dependencies := map[string][]string{}
+	moduleImports := map[string][]string{}
 
 	err := fs.WalkDir(files, "elements", func(filePath string, entry fs.DirEntry, err error) error {
 		if err != nil {
@@ -211,6 +218,7 @@ func buildElementManifest() ([]byte, error) {
 				fileDependencies[string(tagMatch[1])] = struct{}{}
 			}
 		}
+		fileModuleImports := staticModuleImports(contents)
 
 		for _, match := range matches {
 			name := string(match[1])
@@ -227,6 +235,9 @@ func buildElementManifest() ([]byte, error) {
 			}
 			sort.Strings(dependencyNames)
 			dependencies[name] = dependencyNames
+			if len(fileModuleImports) > 0 {
+				moduleImports[name] = fileModuleImports
+			}
 		}
 
 		return nil
@@ -236,14 +247,54 @@ func buildElementManifest() ([]byte, error) {
 	}
 
 	manifestDocument := struct {
-		Elements     map[string]string   `json:"elements"`
-		Dependencies map[string][]string `json:"dependencies"`
+		Elements      map[string]string   `json:"elements"`
+		Dependencies  map[string][]string `json:"dependencies"`
+		ModuleImports map[string][]string `json:"moduleImports"`
 	}{
-		Elements:     manifest,
-		Dependencies: dependencies,
+		Elements:      manifest,
+		Dependencies:  dependencies,
+		ModuleImports: moduleImports,
 	}
 
 	return json.Marshal(manifestDocument)
+}
+
+func staticModuleImports(contents []byte) []string {
+	imports := map[string]struct{}{}
+	for _, scriptMatch := range elementScriptPattern.FindAllSubmatch(contents, -1) {
+		if moduleScriptTypePattern.Match(scriptMatch[1]) == false {
+			continue
+		}
+
+		ast, err := jsparser.Parse(parse.NewInputBytes(scriptMatch[2]), jsparser.Options{})
+		if err != nil {
+			continue
+		}
+		for _, statement := range ast.List {
+			importStatement, ok := statement.(*jsparser.ImportStmt)
+			if ok == false {
+				continue
+			}
+			modulePath, err := strconv.Unquote(string(importStatement.Module))
+			if err != nil || isLocalModuleImport(modulePath) == false {
+				continue
+			}
+			imports[modulePath] = struct{}{}
+		}
+	}
+
+	modulePaths := make([]string, 0, len(imports))
+	for modulePath := range imports {
+		modulePaths = append(modulePaths, modulePath)
+	}
+	sort.Strings(modulePaths)
+	return modulePaths
+}
+
+func isLocalModuleImport(modulePath string) bool {
+	return (strings.HasPrefix(modulePath, "/") && strings.HasPrefix(modulePath, "//") == false) ||
+		strings.HasPrefix(modulePath, "./") ||
+		strings.HasPrefix(modulePath, "../")
 }
 func shouldServeIndex(requestPath string, files fs.FS) (bool, error) {
 	if requestPath == "/" {

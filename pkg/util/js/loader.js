@@ -1,5 +1,6 @@
 const loaded = new Set();
 const loadsByURL = new Map();
+const preloadedModules = new Set();
 const elementBasePath = "/elements/";
 const elementManifestPath = "/framework/element-manifest.json";
 const webVersion = document.documentElement.dataset.webVersion || "";
@@ -59,6 +60,23 @@ const resolveElementUrl = (name) => {
 
 const getManifestDependencies = (name) =>
   elementManifest.dependencies?.[name] || [];
+
+const getManifestModuleImports = (name) =>
+  elementManifest.moduleImports?.[name] || [];
+
+const preloadModuleImports = (name) => {
+  const elementUrl = resolveElementUrl(name);
+  getManifestModuleImports(name).forEach((modulePath) => {
+    const moduleUrl = versionedUrl(modulePath, elementUrl);
+    if (preloadedModules.has(moduleUrl.href)) return;
+
+    preloadedModules.add(moduleUrl.href);
+    const link = document.createElement("link");
+    link.rel = "modulepreload";
+    link.href = moduleUrl.href;
+    document.head.appendChild(link);
+  });
+};
 
 const elementName = (element) => element.tagName.toLowerCase();
 
@@ -209,6 +227,8 @@ const loadElementTree = async (initialNames) => {
 
       scheduledNames.add(name);
       names.push(name);
+
+      preloadModuleImports(name);
       getManifestDependencies(name).forEach((dependency) => {
         namesToVisit.push(dependency);
       });
