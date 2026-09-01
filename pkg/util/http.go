@@ -49,6 +49,9 @@ func framework(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.URL.Path {
 	case "/framework/element-manifest.json":
+		// The HTML response preloads this exact URL. Keep it revalidatable so
+		// a newly deployed shell cannot pair with an older dependency graph.
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(elementManifest)
 	case "/framework/basic-web.js":

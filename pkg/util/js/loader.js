@@ -18,7 +18,9 @@ document.head.appendChild(loadingStyle);
 const loadElementManifest = () => {
   if (elementManifestPromise) return elementManifestPromise;
 
-  elementManifestPromise = fetch(versionedUrl(elementManifestPath))
+  // Match the response Link preload exactly; the server makes the manifest
+  // revalidatable so it cannot outlive a newly deployed page shell.
+  elementManifestPromise = fetch(elementManifestPath)
     .then((response) => {
       if (!response.ok)
         throw new Error(`failed to load element manifest: ${response.status}`);
