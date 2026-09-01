@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.20260901.2 - 2026-09-01
+
+### Added
+
+- Generate static custom-element dependency graphs so route component trees can begin fetching known templates concurrently.
+- Add `SetupHttpMuxWithOptions` for applications to provide their release web version.
+
+### Changed
+
+- Preload the versioned element manifest when a release version is configured, matching the loader request exactly.
+
+### Fixed
+
+- Cache a release-versioned manifest immutably while keeping unversioned manifest requests revalidatable for compatibility.
+
 ## v0.20260901.1 - 2026-09-01
 
 ### Changed
