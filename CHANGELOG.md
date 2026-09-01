@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.20260901.3 - 2026-09-01
+
+### Added
+
+- Discover literal local JavaScript module imports in custom-element files and preload them with the element dependency tree.
+- Document Basic Web setup, component conventions, caching, loader behavior, and maintainer guidance.
+
 ## v0.20260901.2 - 2026-09-01
 
 ### Added
