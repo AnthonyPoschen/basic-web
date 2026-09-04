@@ -204,6 +204,8 @@ The loader also scans after `DOMContentLoaded`, HTMX settle events, shadow-root 
 
 When changing Basic Web itself, read [Why Basic Web ships these performance features](docs/performance.md) first. Several serving and loader behaviors look like extra machinery. They exist to keep first paint and LCP fast while apps keep CSS and elements in separate source files. Do not undo them to tidy the code without measuring a throttled mobile load, including HTTP/1.1.
 
+When changing a website that uses Basic Web, follow [Website best practices](docs/best-practices/README.md). After a new loading, caching, routing, or Lighthouse lesson, add a file there and link it from that README.
+
 When changing an application that uses Basic Web:
 
 - Keep each custom element in `web/elements/` and keep every custom-element name unique across that directory tree.

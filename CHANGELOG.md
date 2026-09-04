@@ -13,6 +13,7 @@
 ### Documentation
 
 - Record why stylesheet bundling, the single runtime file, versioned immutable cache, the element manifest, and related loader behavior exist, so refactors do not drop them. See `docs/performance.md`.
+- Add `docs/best-practices/` for consuming-app load-path lessons. Each practice is its own file, linked from `docs/best-practices/README.md`.
 
 ## v0.20260901.4 - 2026-09-01
 
