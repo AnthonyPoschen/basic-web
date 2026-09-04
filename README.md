@@ -158,9 +158,11 @@ At startup, Basic Web scans `elements/**/*.html` and generates `/framework/eleme
 
 The browser begins fetching the manifest as soon as `/framework/basic-web.js` runs. On route hydration it uses the manifest to request the element tree concurrently, preload known modules, install all templates, then evaluate the element modules. The route remains hidden while that atomic tree is resolving, which prevents fast-network layout shifts caused by elements arriving one at a time.
 
-Pass a stable `WebVersion` in production. Basic Web adds it to the document manifest preload and runtime manifest request. A matching manifest response is cached for one year with `immutable`; an unversioned manifest uses `no-cache`. Change the version whenever the deployed frontend changes.
+Pass a stable `WebVersion` in production. Basic Web adds it to the document manifest preload and runtime manifest request. A matching manifest or `/framework/basic-web.js` response is cached for one year with `immutable`; an unversioned request uses `no-cache`. Change the version whenever the deployed frontend changes.
 
-Basic Web does not fingerprint or cache your application's JavaScript, CSS, images, fonts, or other assets for you. Serve those with cache headers and asset URLs appropriate for your deployment. The module preload hints include the same web version query so they match the current page load.
+Keep global CSS in separate source files. When `index.html` links two or more local stylesheets, Basic Web serves them as one `/framework/styles.css` file and rewrites the document to that single render-blocking link. Relative `url(...)` paths are rewritten against the original file so fonts and images keep working. External stylesheets are left in place. Source CSS files remain available at their original URLs. This exists because each extra stylesheet is render-blocking and, on HTTP/1.1, steals connections from LCP images; see [Why Basic Web ships these performance features](docs/performance.md).
+
+Basic Web does not fingerprint or cache your application's JavaScript, images, fonts, or other assets for you. Serve those with cache headers and asset URLs appropriate for your deployment. The module preload hints include the same web version query so they match the current page load. The generated stylesheet bundle reuses the query string from the first local stylesheet link, so a `?v=` cache-busting convention on those links also versions `/framework/styles.css`.
 
 ## Use the router
 
@@ -200,6 +202,8 @@ The loader also scans after `DOMContentLoaded`, HTMX settle events, shadow-root 
 
 ## Guidance for coding agents and maintainers
 
+When changing Basic Web itself, read [Why Basic Web ships these performance features](docs/performance.md) first. Several serving and loader behaviors look like extra machinery. They exist to keep first paint and LCP fast while apps keep CSS and elements in separate source files. Do not undo them to tidy the code without measuring a throttled mobile load, including HTTP/1.1.
+
 When changing an application that uses Basic Web:
 
 - Keep each custom element in `web/elements/` and keep every custom-element name unique across that directory tree.
@@ -209,6 +213,8 @@ When changing an application that uses Basic Web:
 - Keep runtime-dependent code as runtime-dependent code. Do not pretend user-specific API responses, authentication state, dynamic imports, or image URLs are statically predictable.
 - Register API routes before Basic Web's fallback handler.
 - Use `SetupHttpMuxWithOptions` and a new `WebVersion` for production frontend releases.
+- Keep global CSS in separate source files. Do not concatenate them in the app to "fix Lighthouse"; the framework already combines local `index.html` stylesheets at serve time.
+- Put page-specific or dashboard-only JavaScript behind dynamic `import()` so public layout elements do not preload it.
 - Test the server with `go test ./...`. For a frontend performance change, also inspect a real browser network trace and verify that the manifest, element sources, and module preloads begin together.
 
 ## Verify a Basic Web change
@@ -225,4 +231,4 @@ Run the example in development mode, make a change under `web/`, and confirm tha
 DEV=1 go run .
 ```
 
-For production behavior, build and run without `DEV=1`, then inspect the response headers and browser network panel. Confirm that the HTML response preloads the versioned manifest and that the matching manifest response is immutable.
+For production behavior, build and run without `DEV=1`, then inspect the response headers and browser network panel. Confirm that the HTML response preloads the versioned manifest, that the matching manifest and `/framework/basic-web.js` responses are immutable, and that local `index.html` stylesheets were combined into one `/framework/styles.css` request. The reasons those checks matter are in [Why Basic Web ships these performance features](docs/performance.md).

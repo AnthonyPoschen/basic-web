@@ -13,6 +13,8 @@ let isScanning = false;
 let scanRequested = false;
 let activeScanPromise = null;
 
+// Hide a hydrating tree until its static custom elements are defined. Revealing
+// nodes as they arrive causes layout shift. See docs/performance.md.
 loadingStyle.textContent = `[${loadingAttribute}] { visibility: hidden !important; }`;
 document.head.appendChild(loadingStyle);
 
@@ -48,6 +50,7 @@ const versionedUrl = (path, base = window.location.origin) => {
   return url;
 };
 
+// Start the manifest fetch as soon as this file runs, not on DOMContentLoaded.
 void loadElementManifest();
 
 const resolveElementUrl = (name) => {
@@ -64,6 +67,7 @@ const getManifestDependencies = (name) =>
 const getManifestModuleImports = (name) =>
   elementManifest.moduleImports?.[name] || [];
 
+// Start recorded local imports with the element HTML instead of after it evaluates.
 const preloadModuleImports = (name) => {
   const elementUrl = resolveElementUrl(name);
   getManifestModuleImports(name).forEach((modulePath) => {

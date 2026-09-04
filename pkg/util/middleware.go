@@ -25,7 +25,9 @@ func Middleware(next http.Handler) http.Handler {
 			if IsDev() {
 				w.Header().Set("Cache-Control", "no-cache")
 			} else {
-				w.Header().Set("Cache-Control", "max-age=86400") // 1 day cache expiry
+				// Safety net only. Versioned /framework/* URLs must set immutable
+				// themselves; this default was the stale basic-web.js cache. See docs/performance.md.
+				w.Header().Set("Cache-Control", "max-age=86400")
 			}
 		}
 		sw := &statusWriter{ResponseWriter: w, Status: http.StatusOK}

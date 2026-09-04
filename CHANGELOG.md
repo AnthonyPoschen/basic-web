@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.20260904.0 - 2026-09-04
+
+### Added
+
+- Combine local stylesheets linked from `index.html` into one `/framework/styles.css` response so apps can keep CSS files split by concern without paying extra render-blocking round trips.
+
+### Changed
+
+- Cache a release-versioned `/framework/basic-web.js` response immutably, matching the element manifest.
+
+### Documentation
+
+- Record why stylesheet bundling, the single runtime file, versioned immutable cache, the element manifest, and related loader behavior exist, so refactors do not drop them. See `docs/performance.md`.
+
 ## v0.20260901.4 - 2026-09-01
 
 ### Added

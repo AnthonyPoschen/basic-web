@@ -38,6 +38,7 @@ var js_router []byte
 //go:embed js/utils.js
 var js_utils []byte
 
+// One runtime file avoids three render-blocking classic scripts. See docs/performance.md.
 var js_basic_web = bytes.Join([][]byte{
 	js_utils,
 	[]byte("\n;\n"),
@@ -71,8 +72,32 @@ func framework(webVersion string) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			_, err = w.Write(elementManifest)
 		case "/framework/basic-web.js":
+			// Versioned URLs are content-addressed by WebVersion. A 1-day default
+			// cache here revalidates bytes the query already busts. See docs/performance.md.
+			if webVersion != "" && webVersion != "dev" && r.URL.Query().Get("v") == webVersion {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
 			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 			_, err = w.Write(js_basic_web)
+		case "/framework/styles.css":
+			var data []byte
+			data, err = fs.ReadFile(files, bundledStylesheetPath)
+			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					http.NotFound(w, r)
+					return
+				}
+				break
+			}
+			if webVersion != "" && webVersion != "dev" && r.URL.Query().Get("v") == webVersion {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
+			w.Header().Set("Content-Type", "text/css; charset=utf-8")
+			_, err = w.Write(data)
 		default:
 			http.NotFound(w, r)
 		}
@@ -89,7 +114,8 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 
 // SetupHttpMuxWithOptions registers framework and static-file handlers.
 func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options SetupHttpMuxOptions) {
-	files = filesystem
+	// Combine local index.html stylesheets for the browser; keep source files split.
+	files = WithBundledStylesheets(filesystem)
 	// build initial manifest once we know the filesystem
 	var err error
 	elementManifest, err = buildElementManifest()
@@ -125,6 +151,8 @@ func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options Setup
 			if options.WebVersion != "" && options.WebVersion != "dev" {
 				manifestURL += "?v=" + url.QueryEscape(options.WebVersion)
 			}
+			// Start the manifest before basic-web.js finishes. The URL must match
+			// the loader request, including ?v=. See docs/performance.md.
 			w.Header().Set("Link", "<"+manifestURL+">; rel=preload; as=fetch; crossorigin")
 			http.ServeFileFS(w, r, files, "index.html")
 			return
