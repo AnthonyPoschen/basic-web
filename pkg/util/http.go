@@ -53,6 +53,8 @@ var js_basic_web = bytes.Join([][]byte{
 type SetupHttpMuxOptions struct {
 	WebVersion             string
 	SiteOrigin             string
+	SiteName               string
+	DefaultShareImage      string
 	PublicHTMLCacheControl string
 	Resolve                func(r *http.Request, route Route, params map[string]string) (Document, bool)
 	SitemapPaths           func() []string

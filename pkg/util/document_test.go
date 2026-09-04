@@ -122,3 +122,60 @@ func TestSetupHttpMuxResolvesIndexedParamRoutes(t *testing.T) {
 		t.Fatalf("missing item status = %d", missing.Code)
 	}
 }
+
+func TestApplyFillsMatchesMinifiedUnquotedAttributes(t *testing.T) {
+	input := `<h1 id=heading data-fill=heading>Item</h1><nav data-fill-html=related hidden><span>none</span></nav>`
+	got := applyFills(input, map[string]string{"heading": "Oak trees"}, map[string]string{"related": `<a href="/cedar">Cedar</a>`})
+	if !strings.Contains(got, ">Oak trees</h1>") {
+		t.Fatalf("unquoted text fill missing: %s", got)
+	}
+	if strings.Contains(got, " hidden") {
+		t.Fatalf("related nav stayed hidden: %s", got)
+	}
+	if !strings.Contains(got, `href="/cedar"`) {
+		t.Fatalf("unquoted html fill missing: %s", got)
+	}
+}
+
+func TestApplyFillsPreservesDollarSigns(t *testing.T) {
+	input := `<h1 data-fill="heading">Choose</h1><nav data-fill-html="related" hidden></nav><div id="plan-grid" data-fill-html="plans"></div>`
+	got := applyFills(input, map[string]string{"heading": "Factorio"}, map[string]string{
+		"related": `<a href="/z">Zomboid</a>`,
+		"plans":   `<article><h3>Spark</h3><strong>$15</strong></article>`,
+	})
+	if !strings.Contains(got, "$15") {
+		t.Fatalf("dollar amount was rewritten: %s", got)
+	}
+}
+
+func TestSetupHttpMuxStampsOpenGraphFromDocument(t *testing.T) {
+	mux := http.NewServeMux()
+	SetupHttpMuxWithOptions(mux, fstest.MapFS{
+		"index.html": {Data: []byte(`<!DOCTYPE html><html><head><title>Shell</title></head><body><route-view></route-view></body></html>`)},
+		"elements/pages/home.html": {Data: []byte(`
+<template id="page-home" data-route="/" data-title="Garden home" data-description="Home gardens" data-index>
+  <h1>Garden home</h1>
+</template>
+<script>customElements.define("page-home", class extends ShadowHTMLElement { constructor() { super("page-home") } })</script>`)},
+	}, SetupHttpMuxOptions{
+		SiteOrigin:        "https://example.test",
+		SiteName:          "Garden",
+		DefaultShareImage: "/images/share.jpg",
+	})
+
+	home := httptest.NewRecorder()
+	mux.ServeHTTP(home, httptest.NewRequest(http.MethodGet, "/", nil))
+	body := home.Body.String()
+	for _, want := range []string{
+		`property="og:title" content="Garden home"`,
+		`property="og:description" content="Home gardens"`,
+		`property="og:url" content="https://example.test/"`,
+		`property="og:site_name" content="Garden"`,
+		`property="og:image" content="https://example.test/images/share.jpg"`,
+		`name="twitter:card" content="summary_large_image"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %s in %s", want, body)
+		}
+	}
+}

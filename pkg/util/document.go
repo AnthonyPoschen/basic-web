@@ -25,6 +25,8 @@ type Document struct {
 	Title       string
 	Description string
 	Canonical   string
+	Image       string
+	SiteName    string
 	Status      int
 	Redirect    string
 	Index       bool
@@ -76,8 +78,60 @@ func applyDocumentHead(index []byte, doc Document, origin string) []byte {
 			htmlDoc = insertHead(htmlDoc, tag)
 		}
 	}
+	htmlDoc = applyShareTags(htmlDoc, doc, origin, canonical)
 	htmlDoc = insertHead(htmlDoc, `<style>[data-basic-web-server-rendered]:not(:defined){visibility:visible}</style>`)
 	return []byte(htmlDoc)
+}
+
+func applyShareTags(htmlDoc string, doc Document, origin string, canonical string) string {
+	if doc.Title != "" {
+		htmlDoc = upsertMetaProperty(htmlDoc, "og:title", doc.Title)
+		htmlDoc = upsertMetaName(htmlDoc, "twitter:title", doc.Title)
+	}
+	if doc.Description != "" {
+		htmlDoc = upsertMetaProperty(htmlDoc, "og:description", doc.Description)
+		htmlDoc = upsertMetaName(htmlDoc, "twitter:description", doc.Description)
+	}
+	if canonical != "" {
+		htmlDoc = upsertMetaProperty(htmlDoc, "og:url", canonical)
+	}
+	siteName := strings.TrimSpace(doc.SiteName)
+	if siteName == "" {
+		siteName = strings.TrimSpace(muxOptions.SiteName)
+	}
+	if siteName != "" {
+		htmlDoc = upsertMetaProperty(htmlDoc, "og:site_name", siteName)
+	}
+	htmlDoc = upsertMetaProperty(htmlDoc, "og:type", "website")
+	image := strings.TrimSpace(doc.Image)
+	if image == "" {
+		image = strings.TrimSpace(muxOptions.DefaultShareImage)
+	}
+	if image != "" && origin != "" {
+		image = absoluteURL(origin, image)
+		htmlDoc = upsertMetaProperty(htmlDoc, "og:image", image)
+		htmlDoc = upsertMetaName(htmlDoc, "twitter:image", image)
+		htmlDoc = upsertMetaName(htmlDoc, "twitter:card", "summary_large_image")
+	}
+	return htmlDoc
+}
+
+func upsertMetaProperty(document string, property string, content string) string {
+	tag := `<meta property="` + html.EscapeString(property) + `" content="` + html.EscapeString(content) + `">`
+	pattern := regexp.MustCompile(`(?is)<meta\s+property=(?:"` + regexp.QuoteMeta(property) + `"|'` + regexp.QuoteMeta(property) + `|` + regexp.QuoteMeta(property) + `)[^>]*>`)
+	if pattern.MatchString(document) {
+		return pattern.ReplaceAllString(document, tag)
+	}
+	return insertHead(document, tag)
+}
+
+func upsertMetaName(document string, name string, content string) string {
+	tag := `<meta name="` + html.EscapeString(name) + `" content="` + html.EscapeString(content) + `">`
+	pattern := regexp.MustCompile(`(?is)<meta\s+name=(?:"` + regexp.QuoteMeta(name) + `"|'` + regexp.QuoteMeta(name) + `|` + regexp.QuoteMeta(name) + `)[^>]*>`)
+	if pattern.MatchString(document) {
+		return pattern.ReplaceAllString(document, tag)
+	}
+	return insertHead(document, tag)
 }
 
 func replaceTagContent(document string, pattern *regexp.Regexp, replacement string) string {
@@ -108,10 +162,22 @@ func applyFills(input string, fills map[string]string, htmlFills map[string]stri
 }
 
 func replaceFill(input string, attr string, name string, value string) string {
-	re := regexp.MustCompile(`(?s)(` + regexp.QuoteMeta(attr) + `="` + regexp.QuoteMeta(name) + `"[^>]*>)(.*?)(</[a-zA-Z0-9-]+)`)
-	input = re.ReplaceAllString(input, `${1}`+value+`${3}`)
-	hidden := regexp.MustCompile(`(` + regexp.QuoteMeta(attr) + `="` + regexp.QuoteMeta(name) + `"[^>]*?)\s+hidden\b`)
+	eq := attrEqualsName(attr, name)
+	re := regexp.MustCompile(`(?s)(<[^>]*` + eq + `(?:\s[^>]*)?>)(.*?)(</[a-zA-Z0-9-]+)`)
+	input = re.ReplaceAllStringFunc(input, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) < 4 {
+			return match
+		}
+		return parts[1] + value + parts[3]
+	})
+	hidden := regexp.MustCompile(`(<[^>]*` + eq + `[^>]*?)\s+hidden\b`)
 	return hidden.ReplaceAllString(input, `$1`)
+}
+
+func attrEqualsName(attr string, name string) string {
+	quoted := regexp.QuoteMeta(name)
+	return regexp.QuoteMeta(attr) + `=(?:"` + quoted + `"|'` + quoted + `'|` + quoted + `)`
 }
 
 func renderElementTree(site *siteModel, elementName string, fills map[string]string, htmlFills map[string]string, depth int) string {
@@ -305,6 +371,12 @@ func mergeDocument(base Document, overlay Document) Document {
 	}
 	if overlay.HTMLFills != nil {
 		base.HTMLFills = overlay.HTMLFills
+	}
+	if overlay.Image != "" {
+		base.Image = overlay.Image
+	}
+	if overlay.SiteName != "" {
+		base.SiteName = overlay.SiteName
 	}
 	if overlay.Index {
 		base.Index = true
