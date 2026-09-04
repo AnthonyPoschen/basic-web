@@ -21,6 +21,8 @@ import (
 )
 
 var elementManifest []byte
+var site siteModel
+var muxOptions SetupHttpMuxOptions
 var elementDefinitionPattern = regexp.MustCompile(`customElements\.define\(\s*['"]([a-z0-9]+(?:-[a-z0-9]+)+)['"]`)
 var elementTemplatePattern = regexp.MustCompile(`(?is)<template\b[^>]*>(.*?)</template>`)
 var elementTagPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s|/?>)`)
@@ -49,7 +51,11 @@ var js_basic_web = bytes.Join([][]byte{
 
 // SetupHttpMuxOptions configures cache behavior for framework resources.
 type SetupHttpMuxOptions struct {
-	WebVersion string
+	WebVersion             string
+	SiteOrigin             string
+	PublicHTMLCacheControl string
+	Resolve                func(r *http.Request, route Route, params map[string]string) (Document, bool)
+	SitemapPaths           func() []string
 }
 
 func framework(webVersion string) http.HandlerFunc {
@@ -116,6 +122,7 @@ func SetupHttpMux(mux *http.ServeMux, filesystem fs.FS) {
 func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options SetupHttpMuxOptions) {
 	// Combine local index.html stylesheets for the browser; keep source files split.
 	files = WithBundledStylesheets(filesystem)
+	muxOptions = options
 	// build initial manifest once we know the filesystem
 	var err error
 	elementManifest, err = buildElementManifest()
@@ -136,6 +143,10 @@ func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options Setup
 			serveRobotsTXT(w, r, files)
 			return
 		}
+		if r.URL.Path == "/sitemap.xml" {
+			serveSitemap(w, options)
+			return
+		}
 
 		ok, err := shouldServeIndex(r.URL.Path, files)
 		if err != nil {
@@ -147,6 +158,9 @@ func SetupHttpMuxWithOptions(mux *http.ServeMux, filesystem fs.FS, options Setup
 			return
 		}
 		if ok {
+			if serveRouteDocument(w, r, files, options) {
+				return
+			}
 			manifestURL := "/framework/element-manifest.json"
 			if options.WebVersion != "" && options.WebVersion != "dev" {
 				manifestURL += "?v=" + url.QueryEscape(options.WebVersion)
@@ -221,6 +235,8 @@ func buildElementManifest() ([]byte, error) {
 	manifest := map[string]string{}
 	dependencies := map[string][]string{}
 	moduleImports := map[string][]string{}
+	templates := map[string]string{}
+	var routes []compiledRoute
 
 	err := fs.WalkDir(files, "elements", func(filePath string, entry fs.DirEntry, err error) error {
 		if err != nil {
@@ -252,12 +268,19 @@ func buildElementManifest() ([]byte, error) {
 		}
 		fileModuleImports := staticModuleImports(contents)
 
+		templateInners := elementTemplatePattern.FindAllSubmatch(contents, -1)
 		for _, match := range matches {
 			name := string(match[1])
 			if existingPath, ok := manifest[name]; ok && existingPath != relativePath {
 				return fmt.Errorf("element %q defined in both %q and %q", name, existingPath, relativePath)
 			}
 			manifest[name] = relativePath
+			if len(templateInners) > 0 {
+				templates[name] = string(templateInners[0][1])
+			}
+			for _, route := range parseTemplateRoutes(name, contents) {
+				routes = append(routes, compileRoute(route))
+			}
 
 			dependencyNames := make([]string, 0, len(fileDependencies))
 			for dependency := range fileDependencies {
@@ -278,16 +301,37 @@ func buildElementManifest() ([]byte, error) {
 		return nil, err
 	}
 
+	type manifestRoute struct {
+		Pattern     string `json:"pattern"`
+		Element     string `json:"element"`
+		Title       string `json:"title,omitempty"`
+		Description string `json:"description,omitempty"`
+		Index       bool   `json:"index,omitempty"`
+	}
+	serializedRoutes := make([]manifestRoute, 0, len(routes))
+	for _, route := range routes {
+		serializedRoutes = append(serializedRoutes, manifestRoute{
+			Pattern:     route.Pattern,
+			Element:     route.Element,
+			Title:       route.Title,
+			Description: route.Description,
+			Index:       route.Index,
+		})
+	}
+
 	manifestDocument := struct {
 		Elements      map[string]string   `json:"elements"`
 		Dependencies  map[string][]string `json:"dependencies"`
 		ModuleImports map[string][]string `json:"moduleImports"`
+		Routes        []manifestRoute     `json:"routes"`
 	}{
 		Elements:      manifest,
 		Dependencies:  dependencies,
 		ModuleImports: moduleImports,
+		Routes:        serializedRoutes,
 	}
 
+	site = siteModel{routes: routes, templates: templates, elements: manifest}
 	return json.Marshal(manifestDocument)
 }
 

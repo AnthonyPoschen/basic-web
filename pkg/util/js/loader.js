@@ -33,6 +33,7 @@ const loadElementManifest = () => {
       } else {
         elementManifest = { elements: manifest || {}, dependencies: {} };
       }
+      registerManifestRoutes(elementManifest);
       return elementManifest;
     })
     .catch((error) => {
@@ -50,8 +51,22 @@ const versionedUrl = (path, base = window.location.origin) => {
   return url;
 };
 
+const registerManifestRoutes = (manifest) => {
+  const routes = manifest?.routes;
+  if (!Array.isArray(routes) || !window.Router?.register) return;
+  routes.forEach((route) => {
+    if (route?.pattern && route?.element) {
+      window.Router.register(route.pattern, route.element, {
+        title: route.title,
+        description: route.description,
+        index: route.index,
+      });
+    }
+  });
+};
+
 // Start the manifest fetch as soon as this file runs, not on DOMContentLoaded.
-void loadElementManifest();
+window.basicWebReady = loadElementManifest();
 
 const resolveElementUrl = (name) => {
   const relativePath = elementManifest.elements?.[name] || `${name}.html`;

@@ -35,9 +35,12 @@ Lighthouse SEO is a floor (titles, description, crawlable `href`s,
 canonical). It is not the product. Ranking and Search Console are out of
 band.
 
-Genos does this in the app by rewriting `index.html` for
-`/plans/{game}/{region}` before the framework catch-all. A framework hook
-is only needed if an app cannot intercept those routes itself.
+Declare public routes on the page `<template>` (`data-route`,
+`data-title`, `data-description`, `data-index`). Basic Web scans those
+templates, serves that markup in the first HTML (declarative shadow DOM
+of the same tree), and hydrates it in the browser. Parameterized URLs
+still need the app to resolve real instances (fills, 404, redirects) and
+to list sitemap paths. Do not maintain a second crawler-only document.
 
 See [seo-support-plan.md](../seo-support-plan.md) for the longer research.
 

@@ -141,9 +141,9 @@ class RouteView extends HTMLElement {
 
   connectedCallback() {
     this.unsubscribe = window.Router.subscribe((route) => this.render(route));
-    // Hydrate on connect so element fetches overlap deferred third-party scripts
-    // instead of waiting for DOMContentLoaded. See docs/performance.md.
-    queueMicrotask(() => window.Router.start());
+    // Wait for the scanned route table so start() does not render not-found
+    // before data-route registrations exist.
+    Promise.resolve(window.basicWebReady).then(() => window.Router.start());
   }
 
   disconnectedCallback() {
@@ -153,6 +153,19 @@ class RouteView extends HTMLElement {
   async render(route) {
     const renderVersion = ++this.renderVersion;
     const elementName = route.element || this.getAttribute("not-found");
+    const existing = this.firstElementChild;
+    if (
+      this.hasAttribute("data-basic-web-server-rendered") &&
+      existing &&
+      existing.localName === elementName &&
+      existing.getAttribute("data-route-path") === route.path
+    ) {
+      existing.route = route;
+      await window.elementLoader?.hydrate?.(existing);
+      this.removeAttribute("data-route-loading");
+      this.setAttribute("aria-busy", "false");
+      return;
+    }
     this.setAttribute("data-route-loading", "");
     this.setAttribute("aria-busy", "true");
     // Hold the route until the static element tree is defined to avoid CLS.

@@ -17,9 +17,11 @@ window.globalSheet = globalSheet;
 class ShadowHTMLElement extends HTMLElement {
 	constructor(templateID) {
 		super();
-		this.attachShadow({ mode: 'open' });
-		this.shadowRoot.adoptedStyleSheets = [window.globalSheet];
+		const root = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
+		root.adoptedStyleSheets = [window.globalSheet];
 		this.template = document.getElementById(templateID);
-		this.shadowRoot.appendChild(this.template.content.cloneNode(true));
+		if (!root.hasChildNodes() && this.template) {
+			root.appendChild(this.template.content.cloneNode(true));
+		}
 	}
 }
