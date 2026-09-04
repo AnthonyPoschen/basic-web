@@ -219,6 +219,13 @@ func serveRouteDocument(w http.ResponseWriter, r *http.Request, files fs.FS, opt
 	if len(site.routes) == 0 {
 		return false
 	}
+	if path := r.URL.Path; len(path) > 1 && strings.HasSuffix(path, "/") {
+		trimmed := strings.TrimSuffix(path, "/")
+		if _, _, ok := site.match(trimmed); ok {
+			http.Redirect(w, r, trimmed, http.StatusPermanentRedirect)
+			return true
+		}
+	}
 	route, params, matched := site.match(r.URL.Path)
 	if matched == false {
 		writeNotFound(w)

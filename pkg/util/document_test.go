@@ -70,6 +70,15 @@ func TestSetupHttpMuxServesUniqueFirstHTMLPerRoute(t *testing.T) {
 	if missing.Code != http.StatusNotFound {
 		t.Fatalf("unknown path status = %d", missing.Code)
 	}
+
+	slash := httptest.NewRecorder()
+	mux.ServeHTTP(slash, httptest.NewRequest(http.MethodGet, "/about/", nil))
+	if slash.Code != http.StatusPermanentRedirect {
+		t.Fatalf("/about/ status = %d", slash.Code)
+	}
+	if location := slash.Header().Get("Location"); location != "/about" {
+		t.Fatalf("/about/ location = %q", location)
+	}
 }
 
 func TestSetupHttpMuxResolvesIndexedParamRoutes(t *testing.T) {
