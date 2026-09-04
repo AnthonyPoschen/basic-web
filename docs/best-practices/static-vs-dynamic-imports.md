@@ -14,7 +14,8 @@ in the Genos run). The bytes also delay Time to Interactive.
 
 - Use a static `import` only for code every visitor of that element needs.
 - Use `import("/scripts/server-admin.js")` (dynamic) for signed-in-only or
-  route-only work, such as an admin nav link after Clerk says the user is in.
+  route-only work. Do not `await` that work before painting public chrome.
+  An admin nav link can appear after idle; only one person sees it.
 - Put shared auth helpers in a small module (`clerk.js`) that the header can
   static-import without pulling the rest of the admin API.
 
@@ -31,4 +32,4 @@ import instead.
 Genos `site-header.html` imported `getSystemAdminUser` from `server-admin.js`.
 The homepage network log fetched that 37KB module for every visitor. The
 header now static-imports `clerk.js` and dynamically imports `server-admin.js`
-only after a signed-in session.
+only after a signed-in session, on idle, so the Admin link cannot block LCP.
