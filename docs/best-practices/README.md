@@ -38,3 +38,6 @@ Keep one concern per file. If two lessons share a cause, keep them together.
   HTTP/1.1 until Gateway ALPN advertises `h2`; the pod can stay HTTP/1.1.
 - [Minified HTML may omit `</html>`](minified-optional-html-tags.md) — tdewolff
   drops optional end tags; source can still close `body`/`html`.
+- [Unique first-response HTML](seo-first-response.md) — crawlers index the
+  first GET, not the hydrated shell; each public URL needs its own title,
+  canonical, visible copy, crawlable `href`s, sitemap loc, and public cache.

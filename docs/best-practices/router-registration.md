@@ -21,6 +21,20 @@ order:
 `window.Router.register`. Serve it under `/scripts/` with the same version
 query as the rest of the release.
 
+`route-view` upgrades while `basic-web.js` runs and starts routing on a
+microtask, which flushes **before** the next deferred script. If
+`routes.js` only registers, `start()` has already rendered `not-found`.
+After the last `register` call, re-notify so the real route wins:
+
+```js
+window.Router.navigate(
+  `${location.pathname}${location.search}${location.hash}`,
+  { replace: true },
+)
+```
+
+Same-URL `navigate` notifies subscribers without pushing history.
+
 A test on the production `index.html` filesystem should assert:
 
 - the document contains `src="/scripts/routes.js?v=..."`
@@ -32,6 +46,8 @@ Do not inline `Router.register` in `index.html`, even with `defer`.
 Do not put registration in a `type="module"` file that imports the router
 unless the framework exposes a module entry; today the runtime is a classic
 script that assigns `window.Router`.
+Do not assume `register` after `route-view` has connected will re-render;
+call `navigate` on the current URL once registration is complete.
 
 ## How we learned it
 
