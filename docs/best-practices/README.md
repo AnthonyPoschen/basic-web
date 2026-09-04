@@ -36,3 +36,5 @@ Keep one concern per file. If two lessons share a cause, keep them together.
   files is a 5s LCP on mobile HTTP/1.1.
 - [Offer HTTP/2 at the TLS terminator](http2-at-the-edge.md) — browsers speak
   HTTP/1.1 until Gateway ALPN advertises `h2`; the pod can stay HTTP/1.1.
+- [Minified HTML may omit `</html>`](minified-optional-html-tags.md) — tdewolff
+  drops optional end tags; source can still close `body`/`html`.

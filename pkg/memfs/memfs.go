@@ -115,7 +115,8 @@ func (m *MemFileInfo) Sys() interface{} {
 
 // CreateMinifiedFS copies webFS into memory with HTML, CSS, and JS minified.
 // Authors keep readable source; production responses should still be small.
-// See docs/performance.md.
+// HTML minify omits optional tags such as </html>; that is intended.
+// See docs/performance.md and docs/best-practices/minified-optional-html-tags.md.
 func CreateMinifiedFS(webFS fs.FS) *MemFS {
 	files := make(map[string][]byte)
 	dirs := map[string][]fs.DirEntry{".": {}}
