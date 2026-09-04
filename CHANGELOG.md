@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.20260904.1 - 2026-09-04
+
+### Fixed
+
+- Match `data-fill` and `data-fill-html` after HTML minify drops optional quotes, so route fills apply in production.
+- Keep `$` in fill text instead of treating it as a regexp replacement.
+
+### Added
+
+- Stamp Open Graph and Twitter card tags from the route document (`og:title`, `og:description`, `og:url`, `og:image`, `twitter:card`).
+
 ## v0.20260904.0 - 2026-09-04
 
 ### Added
