@@ -63,6 +63,8 @@ const registerManifestRoutes = (manifest) => {
       });
     }
   });
+  const here = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.Router.navigate(here, { replace: true });
 };
 
 // Start the manifest fetch as soon as this file runs, not on DOMContentLoaded.

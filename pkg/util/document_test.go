@@ -11,7 +11,7 @@ import (
 func TestSetupHttpMuxServesUniqueFirstHTMLPerRoute(t *testing.T) {
 	mux := http.NewServeMux()
 	SetupHttpMuxWithOptions(mux, fstest.MapFS{
-		"index.html": {Data: []byte(`<!DOCTYPE html><html><head><title>Shell</title><meta name="description" content="shell"></head><body><route-view not-found="page-home"></route-view></body></html>`)},
+		"index.html": {Data: []byte(`<!DOCTYPE html><html><head><title data-basic-web-title>Shell</title><meta name="description" content="shell"></head><body><route-view not-found="page-home"></route-view></body></html>`)},
 		"elements/pages/home.html": {Data: []byte(`
 <template id="page-home" data-route="/" data-title="Garden home" data-description="Home gardens" data-index>
   <h1>Garden home</h1>
@@ -38,8 +38,8 @@ func TestSetupHttpMuxServesUniqueFirstHTMLPerRoute(t *testing.T) {
 	}
 	homeBody := home.Body.String()
 	aboutBody := about.Body.String()
-	if !strings.Contains(homeBody, "<title>Garden home</title>") {
-		t.Fatalf("home title missing: %s", homeBody)
+	if !strings.Contains(homeBody, "<title>Garden home</title>") || strings.Contains(homeBody, "<title>Shell</title>") {
+		t.Fatalf("home title missing or duplicate shell title: %s", homeBody)
 	}
 	if !strings.Contains(aboutBody, "<title>About the garden</title>") {
 		t.Fatalf("about title missing: %s", aboutBody)

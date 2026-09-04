@@ -154,10 +154,11 @@ class RouteView extends HTMLElement {
     const renderVersion = ++this.renderVersion;
     const elementName = route.element || this.getAttribute("not-found");
     const existing = this.firstElementChild;
+    // Keep the server-rendered tree for this URL even if client routes have
+    // not registered yet. Replacing it with not-found paints the homepage.
     if (
       this.hasAttribute("data-basic-web-server-rendered") &&
-      existing &&
-      existing.localName === elementName &&
+      existing?.hasAttribute("data-basic-web-server-rendered") &&
       existing.getAttribute("data-route-path") === route.path
     ) {
       existing.route = route;

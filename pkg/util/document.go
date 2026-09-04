@@ -14,7 +14,7 @@ import (
 const DefaultPublicHTMLCacheControl = "public, max-age=3600"
 
 var (
-	titlePattern       = regexp.MustCompile(`(?is)<title>[^<]*</title>`)
+	titlePattern       = regexp.MustCompile(`(?is)<title\b[^>]*>[^<]*</title>`)
 	descriptionPattern = regexp.MustCompile(`(?is)<meta\s+name=(?:"description"|'description'|description)[^>]*>`)
 	canonicalPattern   = regexp.MustCompile(`(?is)<link\s+[^>]*rel=(?:"canonical"|'canonical'|canonical)[^>]*>`)
 	headEndPattern     = regexp.MustCompile(`(?is)</head>`)
@@ -150,12 +150,20 @@ func expandNestedElements(site *siteModel, inner string, fills map[string]string
 
 var elementHostPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s[^>]*)?></[a-z0-9]+(?:-[a-z0-9]+)+>`)
 
-func insertRenderedRoute(index []byte, path string, pattern string, elementName string, renderedInner string) []byte {
+func insertRenderedRoute(index []byte, path string, pattern string, elementName string, renderedInner string, fills map[string]string) []byte {
 	host := `<` + elementName + ` data-basic-web-server-rendered data-route-path="` + html.EscapeString(path) + `"`
 	if pattern != "" {
 		host += ` data-route-pattern="` + html.EscapeString(pattern) + `"`
 	}
-	host += `><template shadowrootmode="open">` + renderedInner + `</template></` + elementName + `>`
+	// Unslotted light-DOM copy for crawlers that do not flatten declarative shadow DOM.
+	fallback := ""
+	if heading := fills["heading"]; heading != "" {
+		fallback = "<h1>" + html.EscapeString(heading) + "</h1>"
+		if lede := fills["lede"]; lede != "" {
+			fallback += "<p>" + html.EscapeString(lede) + "</p>"
+		}
+	}
+	host += `><template shadowrootmode="open">` + renderedInner + `</template>` + fallback + `</` + elementName + `>`
 	replacement := `<route-view not-found="page-home" data-basic-web-server-rendered>` + host + `</route-view>`
 	if routeViewPattern.Match(index) {
 		return routeViewPattern.ReplaceAll(index, []byte(replacement))
@@ -250,7 +258,7 @@ func serveRouteDocument(w http.ResponseWriter, r *http.Request, files fs.FS, opt
 		return false
 	}
 	inner := renderElementTree(&site, route.Element, doc.Fills, doc.HTMLFills, 0)
-	index = insertRenderedRoute(index, normalizeRoutePattern(r.URL.Path), route.Pattern, route.Element, inner)
+	index = insertRenderedRoute(index, normalizeRoutePattern(r.URL.Path), route.Pattern, route.Element, inner, doc.Fills)
 	index = applyDocumentHead(index, doc, options.origin())
 
 	manifestURL := "/framework/element-manifest.json"
