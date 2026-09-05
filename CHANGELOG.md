@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.20260905.0 - 2026-09-05
+
+### Added
+
+- `ExpandRoute` binds parameterized index routes into sitemap locs at request time, so apps can supply live parameter maps instead of a handwritten path list.
+
+### Fixed
+
+- Keep `id`, `class`, and `data-*` attributes on nested custom elements when expanding them into declarative shadow DOM.
+
+### Documentation
+
+- Record `ExpandRoute` in `docs/best-practices/seo-first-response.md`.
+- Add `docs/best-practices/nested-ssr-host-attributes.md` for the nested SSR attribute copy.
+
 ## v0.20260904.1 - 2026-09-04
 
 ### Fixed
