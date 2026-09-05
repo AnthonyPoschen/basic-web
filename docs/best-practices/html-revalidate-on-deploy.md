@@ -17,9 +17,11 @@ Indexable HTML should be stored but revalidated:
 Cache-Control: public, max-age=0, must-revalidate
 ```
 
-Crawlers still see a public document. Browsers send a conditional GET on the
-next visit. After a deploy they receive new HTML (and new `?v=` URLs). Between
-deploys the origin can answer `304` once an `ETag` exists.
+Crawlers still see a public document. Pair that header with an `ETag` for the
+release (the website git SHA). Browsers send `If-None-Match` on the next visit.
+Unchanged releases answer `304` with no body. After a deploy they receive new
+HTML (and new `?v=` URLs). Without the ETag, `max-age=0` would re-download the
+document on every visit.
 
 Keep versioned `/scripts/`, `/styles/`, and `/framework/` URLs
 `public, max-age=31536000, immutable`. Do not move that long lifetime onto
