@@ -41,3 +41,6 @@ Keep one concern per file. If two lessons share a cause, keep them together.
 - [Unique first-response HTML](seo-first-response.md) — crawlers index the
   first GET, not the hydrated shell; each public URL needs its own title,
   canonical, visible copy, crawlable `href`s, sitemap loc, and public cache.
+- [Preserve nested SSR host attributes](nested-ssr-host-attributes.md) —
+  rewriting nested custom elements into declarative shadow DOM must keep
+  `id`/`class`/`data-*`, or first load throws and stays on the skeleton.

@@ -123,6 +123,33 @@ func TestSetupHttpMuxResolvesIndexedParamRoutes(t *testing.T) {
 	}
 }
 
+func TestSetupHttpMuxPreservesNestedCustomElementHostAttributes(t *testing.T) {
+	mux := http.NewServeMux()
+	SetupHttpMuxWithOptions(mux, fstest.MapFS{
+		"index.html": {Data: []byte(`<!DOCTYPE html><html><head><title>Shell</title></head><body><route-view></route-view></body></html>`)},
+		"elements/pages/dashboard.html": {Data: []byte(`
+<template id="page-dashboard" data-route="/dashboard">
+  <chooser-panel id="setup-chooser" data-open="false"></chooser-panel>
+</template>
+<script>customElements.define("page-dashboard", class extends ShadowHTMLElement { constructor() { super("page-dashboard") } })</script>`)},
+		"elements/chooser-panel.html": {Data: []byte(`
+<template id="chooser-panel">
+  <dialog>profiles</dialog>
+</template>
+<script>customElements.define("chooser-panel", class extends ShadowHTMLElement { constructor() { super("chooser-panel") } })</script>`)},
+	}, SetupHttpMuxOptions{SiteOrigin: "https://example.test"})
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dashboard", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status=%d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, `<chooser-panel id="setup-chooser" data-open="false" data-basic-web-server-rendered>`) {
+		t.Fatalf("nested host attributes dropped: %s", body)
+	}
+}
+
 func TestApplyFillsMatchesMinifiedUnquotedAttributes(t *testing.T) {
 	input := `<h1 id=heading data-fill=heading>Item</h1><nav data-fill-html=related hidden><span>none</span></nav>`
 	got := applyFills(input, map[string]string{"heading": "Oak trees"}, map[string]string{"related": `<a href="/cedar">Cedar</a>`})

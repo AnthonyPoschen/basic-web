@@ -199,10 +199,11 @@ func expandNestedElements(site *siteModel, inner string, fills map[string]string
 	}
 	return elementHostPattern.ReplaceAllStringFunc(inner, func(tag string) string {
 		matches := elementHostPattern.FindStringSubmatch(tag)
-		if len(matches) < 2 {
+		if len(matches) < 3 {
 			return tag
 		}
 		name := matches[1]
+		attrs := matches[2]
 		if name == "route-view" {
 			return tag
 		}
@@ -210,11 +211,14 @@ func expandNestedElements(site *siteModel, inner string, fills map[string]string
 			return tag
 		}
 		body := renderElementTree(site, name, nil, nil, depth)
-		return `<` + name + ` data-basic-web-server-rendered><template shadowrootmode="open">` + body + `</template></` + name + `>`
+		if strings.Contains(attrs, "data-basic-web-server-rendered") == false {
+			attrs += ` data-basic-web-server-rendered`
+		}
+		return `<` + name + attrs + `><template shadowrootmode="open">` + body + `</template></` + name + `>`
 	})
 }
 
-var elementHostPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)(?:\s[^>]*)?></[a-z0-9]+(?:-[a-z0-9]+)+>`)
+var elementHostPattern = regexp.MustCompile(`<([a-z0-9]+(?:-[a-z0-9]+)+)((?:\s[^>]*)?)></[a-z0-9]+(?:-[a-z0-9]+)+>`)
 
 func insertRenderedRoute(index []byte, path string, pattern string, elementName string, renderedInner string, fills map[string]string) []byte {
 	host := `<` + elementName + ` data-basic-web-server-rendered data-route-path="` + html.EscapeString(path) + `"`
