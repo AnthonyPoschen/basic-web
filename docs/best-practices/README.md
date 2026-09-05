@@ -32,6 +32,8 @@ Keep one concern per file. If two lessons share a cause, keep them together.
   Clerk (and similar) in `index.html` costs every anonymous visit.
 - [Cache versioned framework URLs as immutable](versioned-cache.md) — `?v=`
   already busts the file; a one-day max-age still revalidates it.
+- [Revalidate HTML that pins versioned assets](html-revalidate-on-deploy.md) —
+  a one-hour HTML `max-age` keeps the previous deploy until a hard refresh.
 - [Size and preload the LCP image](lcp-images.md) — a 300KB hero behind six CSS
   files is a 5s LCP on mobile HTTP/1.1.
 - [Offer HTTP/2 at the TLS terminator](http2-at-the-edge.md) — browsers speak

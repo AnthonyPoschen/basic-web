@@ -25,9 +25,11 @@ Each indexable response needs:
 - Ordinary `<a href>` links to other public URLs. History API navigation is
   fine; `#` fragment routes are not crawlable.
 - A sitemap of those absolute canonicals, advertised from `robots.txt`
-- A public cache policy (`public` with a positive `max-age`). `no-store`
-  and missing `Cache-Control` keep crawlers and repeat visits from reusing
-  the document.
+- A public cache policy (`public`, not `no-store` or `private`). HTML that
+  names versioned `?v=` assets should revalidate (`max-age=0, must-revalidate`)
+  so a deploy is visible without a hard refresh. `no-store` and missing
+  `Cache-Control` keep crawlers from reusing the document. See
+  [html-revalidate-on-deploy.md](html-revalidate-on-deploy.md).
 - A real `404`/`410` for unknown or removed public paths, not the homepage
   shell with `200`
 
