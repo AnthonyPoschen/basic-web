@@ -152,6 +152,27 @@ func (site *siteModel) match(path string) (Route, map[string]string, bool) {
 	return Route{}, nil, false
 }
 
+func bindRoutePattern(pattern string, params map[string]string) (string, bool) {
+	pattern = normalizeRoutePattern(pattern)
+	if pattern == "/" {
+		return "/", true
+	}
+	parts := strings.Split(strings.TrimPrefix(pattern, "/"), "/")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if strings.HasPrefix(part, ":") {
+			value := strings.TrimSpace(params[strings.TrimPrefix(part, ":")])
+			if value == "" || strings.ContainsAny(value, "/?#") {
+				return "", false
+			}
+			out = append(out, value)
+			continue
+		}
+		out = append(out, part)
+	}
+	return "/" + strings.Join(out, "/"), true
+}
+
 func (site *siteModel) staticIndexPaths() []string {
 	seen := map[string]struct{}{}
 	var paths []string
@@ -169,5 +190,27 @@ func (site *siteModel) staticIndexPaths() []string {
 		paths = append(paths, route.Pattern)
 	}
 	sort.Strings(paths)
+	return paths
+}
+
+func (site *siteModel) indexPaths(expand func(Route) []map[string]string, extra func() []string) []string {
+	paths := site.staticIndexPaths()
+	if expand != nil {
+		for _, route := range site.routes {
+			if route.Index == false || strings.Contains(route.Pattern, ":") == false {
+				continue
+			}
+			for _, params := range expand(route.Route) {
+				path, ok := bindRoutePattern(route.Pattern, params)
+				if ok == false {
+					continue
+				}
+				paths = append(paths, path)
+			}
+		}
+	}
+	if extra != nil {
+		paths = append(paths, extra()...)
+	}
 	return paths
 }

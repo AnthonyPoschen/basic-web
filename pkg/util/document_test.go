@@ -179,3 +179,45 @@ func TestSetupHttpMuxStampsOpenGraphFromDocument(t *testing.T) {
 		}
 	}
 }
+
+func TestSetupHttpMuxExpandsParameterizedSitemapPaths(t *testing.T) {
+	mux := http.NewServeMux()
+	SetupHttpMuxWithOptions(mux, fstest.MapFS{
+		"index.html": {Data: []byte(`<!DOCTYPE html><html><head><title>Shell</title></head><body><route-view></route-view></body></html>`)},
+		"elements/pages/plans.html": {Data: []byte(`
+<template id="page-plans" data-route="/plans" data-routes="/plans/:game/:region" data-title="Plans" data-index>
+  <h1>Plans</h1>
+</template>
+<script>customElements.define("page-plans", class extends ShadowHTMLElement { constructor() { super("page-plans") } })</script>`)},
+	}, SetupHttpMuxOptions{
+		SiteOrigin: "https://example.test",
+		ExpandRoute: func(route Route) []map[string]string {
+			if route.Pattern != "/plans/:game/:region" {
+				return nil
+			}
+			return []map[string]string{
+				{"game": "factorio", "region": "australia"},
+				{"game": "project-zomboid", "region": "australia"},
+			}
+		},
+	})
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/sitemap.xml", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("sitemap status = %d", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{
+		"https://example.test/plans",
+		"https://example.test/plans/factorio/australia",
+		"https://example.test/plans/project-zomboid/australia",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("sitemap missing %s: %s", want, body)
+		}
+	}
+	if strings.Contains(body, "/plans/:game") {
+		t.Fatalf("sitemap listed a parameterized pattern: %s", body)
+	}
+}

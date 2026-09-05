@@ -39,8 +39,11 @@ Declare public routes on the page `<template>` (`data-route`,
 `data-title`, `data-description`, `data-index`). Basic Web scans those
 templates, serves that markup in the first HTML (declarative shadow DOM
 of the same tree), and hydrates it in the browser. Parameterized URLs
-still need the app to resolve real instances (fills, 404, redirects) and
-to list sitemap paths. Do not maintain a second crawler-only document.
+still need the app to resolve real instances (fills, 404, redirects).
+Expand those patterns into sitemap locs with `ExpandRoute` (a function of
+the scanned route that returns concrete parameter maps at request time).
+Do not hand-write instance URLs into the template, and do not maintain a
+second crawler-only document.
 
 See [seo-support-plan.md](../seo-support-plan.md) for the longer research.
 

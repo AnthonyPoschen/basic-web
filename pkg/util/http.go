@@ -57,7 +57,10 @@ type SetupHttpMuxOptions struct {
 	DefaultShareImage      string
 	PublicHTMLCacheControl string
 	Resolve                func(r *http.Request, route Route, params map[string]string) (Document, bool)
-	SitemapPaths           func() []string
+	// ExpandRoute returns concrete parameter maps for a parameterized
+	// index route. Those bound paths are listed in the sitemap on each GET.
+	ExpandRoute  func(route Route) []map[string]string
+	SitemapPaths func() []string
 }
 
 func framework(webVersion string) http.HandlerFunc {

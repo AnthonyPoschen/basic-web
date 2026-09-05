@@ -271,10 +271,7 @@ func serveSitemap(w http.ResponseWriter, options SetupHttpMuxOptions) {
 	if origin == "" {
 		origin = "http://localhost"
 	}
-	paths := site.staticIndexPaths()
-	if options.SitemapPaths != nil {
-		paths = append(paths, options.SitemapPaths()...)
-	}
+	paths := site.indexPaths(options.ExpandRoute, options.SitemapPaths)
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.Header().Set("Cache-Control", options.publicCacheControl())
 	w.WriteHeader(http.StatusOK)
